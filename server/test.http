@@ -1,0 +1,7 @@
+GET http://localhost:3001/api/pages
+
+###
+GET http://localhost:3001/api/users
+
+###
+GET http://localhost:3001/api/pages/1/contents
