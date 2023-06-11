@@ -1,35 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+
+// react-bootstrap section
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container, Row, Alert } from 'react-bootstrap';
+
+import { useEffect, useState } from 'react';
+
+// Components
+import NavHeader from './components/NavbarComponents';
+import { FrontLayout } from './components/PageLayout';
+import { LoginForm } from './components/AuthComponents';
+
+import API from './API';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // state
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [pages, setPages] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [authorMap, setAuthorMap] = useState({});
+
+  useEffect(()=> {
+    const fetchData = async () => {
+      const pagesData = await API.getPages();
+      const authorsData = await API.getAuthors();
+
+      const authorMapData = authorsData.reduce((map, author) => {
+        map[author.id] = author.name;
+        return map;
+      }, {});
+
+      setPages(pagesData);
+      setAuthors(authorsData);
+      setAuthorMap(authorMapData);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleLogin = async (credentials) => {
+    try {
+      const user = await API.logIn(credentials);
+      setLoggedIn(true);
+      setMessage({msg: `Welcome, ${user.name}!`, type: 'success'});
+    }catch(err) {
+      setMessage({msg: err, type: 'danger'});
+    }
+  };
+
+  const handleLogout = async () => {
+    await API.logOut();
+    setLoggedIn(false);
+    // clean up everything
+    setMessage('');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Container fluid>
+        <NavHeader loggedIn={loggedIn} handleLogout={handleLogout}/> 
+        <Routes>
+          <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
+          <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
+        </Routes>
+      </Container>
+    </BrowserRouter>
   )
 }
 
-export default App
+export default App;
