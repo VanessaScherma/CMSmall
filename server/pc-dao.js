@@ -49,7 +49,7 @@ exports.listContentsOf = (pageId) => {
       if (err) {
         reject(err);
       }
-      const contents = rows.map((c) => new Content(c.id, c.type, c.content, c.pageId, c.order));
+      const contents = rows.map((c) => new Content(c.id, c.type, c.body, c.pageId, c.order));
       resolve(contents);
     });
   });

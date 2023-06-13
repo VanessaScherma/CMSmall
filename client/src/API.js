@@ -1,4 +1,4 @@
-import { Page, User } from './PCModels';
+import { Page, User, Content } from './PCModels';
 const SERVER_URL = 'http://localhost:3001';
 
 const getPages = async () => {
@@ -21,6 +21,15 @@ const getAuthors = async () => {
     throw new Error('Internal server error');
 }
 
+const getContents = async (pageId) => {
+  const response = await fetch(SERVER_URL + `/api/pages/${pageId}/contents`);
+  if(response.ok) {
+    const contentsJson = await response.json();
+    return contentsJson.map(c => new Content(c.id, c.type, c.body, c.pageId, c.order));
+  }
+  else
+    throw new Error('Internal server error');
+}
 
 
 const logIn = async (credentials) => {
@@ -63,5 +72,5 @@ const logIn = async (credentials) => {
       return null;
   }
 
-const API = { getPages, getAuthors, logIn, logOut, getUserInfo};
+const API = { getPages, getAuthors, getContents, logIn, logOut, getUserInfo};
 export default API;
