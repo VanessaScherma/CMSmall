@@ -60,9 +60,11 @@ function App() {
     try {
       const user = await API.logIn(credentials);
       setLoggedIn(true);
+      setUser(user);
       setMessage({msg: `Welcome, ${user.name}!`, type: 'success'});
     }catch(err) {
       setMessage({msg: err, type: 'danger'});
+      setUser(null);
       console.log(err);
     }
   };
@@ -70,6 +72,7 @@ function App() {
   const handleLogout = async () => {
     await API.logOut();
     setLoggedIn(false);
+    setUser(null);
     // clean up everything
     setMessage('');
   };

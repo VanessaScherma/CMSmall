@@ -59,6 +59,13 @@ app.use(session({
 }));
 app.use(passport.authenticate('session'));
 
+/*** Utility Functions ***/
+
+// This function is used to format express-validator errors as strings
+const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
+  return `${location}[${param}]: ${msg}`;
+};
+
 
 /* ROUTES */
 // ----------------- AUTHENTICATION ---------
@@ -98,7 +105,7 @@ app.delete('/api/sessions/current', (req, res) => {
 });
 
 
-// ------------ Get pages and contents
+// ------------ PAGES AND CONTENTS
 // GET /api/pages
 app.get('/api/pages', (request, response) => {
   dao.listPages()
@@ -129,7 +136,37 @@ app.get('/api/pages/:id/contents', async (req, res) => {
   }
 });
 
-// ------------ Get users
+// POST /api/pages
+app.post('/api/pages', isLoggedIn,
+  [
+    check('title').isLength({min: 1, max:160}),
+    check('creationDate').isDate({format: 'YYYY-MM-DD', strictMode: true}),
+  ],
+  async (req, res) => {
+    // Is there any validation error?
+    const errors = validationResult(req).formatWith(errorFormatter); // format error message
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array().join(", ") }); // error message is a single string with all error joined together
+    }
+
+    // WARN: note that we expect watchDate with capital D but the databases does not care and uses lowercase letters, so it returns "watchdate"
+    const page = {
+      title: req.body.title,
+      authorId: req.user.id,
+      creationDate: req.body.creationDate,
+      publicationDate: req.body.publicationDate,
+    };
+
+    try {
+      const result = await dao.createPage(page); // NOTE: createFilm returns the new created object
+      res.json(result);
+    } catch (err) {
+      res.status(503).json({ error: `Database error during the creation of new page: ${err}` }); 
+    }
+  }
+);
+
+// ------------ USERS
 // GET /api/users
 app.get('/api/users', async(req, res) => {
   try {

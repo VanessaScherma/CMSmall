@@ -1,6 +1,36 @@
 import { Page, User, Content } from './PCModels';
 const SERVER_URL = 'http://localhost:3001';
 
+/**
+ * A utility function for parsing the HTTP response.
+ */
+function getJson(httpResponsePromise) {
+  // server API always return JSON, in case of error the format is the following { error: <message> } 
+  return new Promise((resolve, reject) => {
+    httpResponsePromise
+      .then((response) => {
+        if (response.ok) {
+
+         // the server always returns a JSON, even empty {}. Never null or non json, otherwise the method will fail
+         response.json()
+            .then( json => resolve(json) )
+            .catch( err => reject({ error: "Cannot parse server response" }))
+
+        } else {
+          // analyzing the cause of error
+          response.json()
+            .then(obj => 
+              reject(obj)
+              ) // error msg in the response body
+            .catch(err => reject({ error: "Cannot parse server response" })) // something else
+        }
+      })
+      .catch(err => 
+        reject({ error: "Cannot communicate"  })
+      ) // connection error
+  });
+}
+
 const getPages = async () => {
   const response = await fetch(SERVER_URL + '/api/pages');
   if(response.ok) {
@@ -31,6 +61,19 @@ const getContents = async (pageId) => {
     throw new Error('Internal server error');
 }
 
+function addPage(page) {
+  return getJson(
+    fetch(SERVER_URL + "/api/pages", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(page) 
+    })
+  )
+}
+
 
 const logIn = async (credentials) => {
     const response = await fetch(SERVER_URL + '/api/sessions', {
@@ -57,8 +100,10 @@ const logIn = async (credentials) => {
     });
     const user = await response.json();
     if (response.ok) {
+      console.log("Session ok" + user);
       return user;
     } else {
+      console.log("Session NOT ok" + user);
       throw user;  // an object with the error coming from the server
     }
   };
@@ -72,5 +117,5 @@ const logIn = async (credentials) => {
       return null;
   }
 
-const API = { getPages, getAuthors, getContents, logIn, logOut, getUserInfo};
+const API = { getPages, getAuthors, getContents, addPage, logIn, logOut, getUserInfo};
 export default API;

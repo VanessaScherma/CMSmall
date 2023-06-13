@@ -54,7 +54,7 @@ function AddLayout(props) {
 
     return(
         <>
-            <PageForm userName={userName} authorId={authorId}/>
+            <PageForm userName={props.user.name} authorId={props.user.id}/>
         </>
     )
 }

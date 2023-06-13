@@ -2,6 +2,7 @@ import { Form, ButtonGroup, Button, Dropdown, DropdownButton, Row, Col } from 'r
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from "dayjs";
+import API from '../API';
 
 function PageForm(props) {
     const [formElements, setFormElements] = useState([]);
@@ -10,7 +11,7 @@ function PageForm(props) {
     const [headerCount, setHeaderCount] = useState(0);
     const [paragraphImageCount, setParagraphImageCount] = useState(0);
 
-    const currentDate = dayjs().format('DD/MM/YYYY');
+    let currentDate = dayjs().format('DD/MM/YYYY');
 
     const handleAddHeader = () => {
     const newHeader = {
@@ -83,12 +84,14 @@ function PageForm(props) {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-    
+
+        currentDate = dayjs().format('YYYY-MM-DD');
+        publicationDate !== '' ? dayjs(publicationDate).format('YYYY-MM-DD') : null;
+
         const page = {
-            title: title.trim(),
-            author: props.authorId,
-            creationDate: currentDate,
-            publicationDate: publicationDate
+        title: title.trim(),
+        creationDate: currentDate,
+        ...(publicationDate && { publicationDate }) // Aggiungi la proprietà solo se publicationDate è presente
         };
     
         const contents = formElements.map((element, index) => {
@@ -105,6 +108,7 @@ function PageForm(props) {
             // Aggiungere logica per editPage
         } else {
             // Aggiungere logica per addPage
+            API.addPage(page);
         }
     
         contents.forEach((content) => {
@@ -113,6 +117,7 @@ function PageForm(props) {
         });
 
         console.log(page);
+        console.log("AUTHORID" + props.authorId);
     };
 
     return (
@@ -144,7 +149,7 @@ function PageForm(props) {
                     <Col>
                         <Form.Group controlId="publicationDate" className="top-space">
                             <Form.Label>Publication date</Form.Label>
-                            <Form.Control type="date" required={true} onChange={event => setPublicationDate(event.target.value)}/>
+                            <Form.Control type="date" onChange={event => setPublicationDate(event.target.value)}/>
                         </Form.Group>
                     </Col>
                 </Row>

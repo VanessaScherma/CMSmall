@@ -38,6 +38,19 @@ exports.getPage = (id) => {
   });
 };
 
+exports.createPage = (page) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO page (title, authorId, creationDate, publicationDate) VALUES(?, ?, DATE(?), DATE(?))';
+    db.run(sql, [page.title, page.authorId, page.creationDate, page.publicationDate], function (err) {
+      if (err) {
+        reject(err);
+      }
+      // Returning the newly created object with the DB additional properties to the client.
+      resolve(exports.getPage(this.lastID));
+    });
+  });
+};
+
 
 /** CONTENTS **/
 
