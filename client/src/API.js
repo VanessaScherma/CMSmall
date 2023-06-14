@@ -61,19 +61,39 @@ const getContents = async (pageId) => {
     throw new Error('Internal server error');
 }
 
-function addPage(page) {
-  return getJson(
-    fetch(SERVER_URL + "/api/pages", {
+const addPage = async (page) => {
+  const response = await fetch(SERVER_URL + "/api/pages", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
       body: JSON.stringify(page) 
-    })
-  )
+  });
+  if (response.ok) {
+    const pageJson = await response.json();
+    return pageJson.id;
+  }
+  else
+    throw new Error('Internal server error');
 }
 
+const addContent = async (content) => {
+  const response = await fetch(SERVER_URL + "/api/contents", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(content) 
+  });
+  console.log(response);
+  if (response.ok) {
+    return null;
+  }
+  else
+    throw new Error('Internal server error');
+}
 
 const logIn = async (credentials) => {
     const response = await fetch(SERVER_URL + '/api/sessions', {
@@ -117,5 +137,5 @@ const logIn = async (credentials) => {
       return null;
   }
 
-const API = { getPages, getAuthors, getContents, addPage, logIn, logOut, getUserInfo};
+const API = { getPages, getAuthors, getContents, addPage, addContent, logIn, logOut, getUserInfo};
 export default API;

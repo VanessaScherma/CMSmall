@@ -68,6 +68,19 @@ exports.listContentsOf = (pageId) => {
   });
 };
 
+exports.createContent = (content) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO content (type, body, pageId, pageOrder) VALUES(?, ?, ?, ?)';
+    db.run(sql, [content.type, content.body, content.pageId, content.pageOrder], function (err) {
+      if (err) {
+        reject(err);
+      }
+      // Returning the newly created object with the DB additional properties to the client.
+      resolve(this.lastID);
+    });
+  });
+};
+
 
 /** USERS **/
 // get id and name of all the users

@@ -43,15 +43,6 @@ function BackLayout(props) {
 }
 
 function AddLayout(props) {
-    const userName = props.user.name;
-
-    const getAuthorIdByName = (userName) => {
-        const entry = Object.entries(props.authorMap).find(([id, authorName]) => authorName === userName);
-        return entry ? entry[0] : null; // Restituisce l'id se trovato, altrimenti null
-    };
-
-    const authorId = getAuthorIdByName(userName);
-
     return(
         <>
             <PageForm userName={props.user.name} authorId={props.user.id}/>

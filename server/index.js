@@ -166,6 +166,47 @@ app.post('/api/pages', isLoggedIn,
   }
 );
 
+// GET /api/pages/<id>/contents
+app.get('/api/pages/:id/contents', async (req, res) => {
+  try {
+    const contents = await dao.listContentsOf(req.params.id);
+    res.json(contents);
+  } catch {
+    res.status(500).end();
+  }
+});
+
+// POST /api/contents
+app.post('/api/contents', isLoggedIn,
+  [
+    check('type').isLength({min: 1, max:160}),
+    check('body').isLength({min: 1}),
+    check('pageId').isNumeric(),
+    check('pageOrder').isNumeric(),
+  ],
+  async (req, res) => {
+    // Is there any validation error?
+    const errors = validationResult(req).formatWith(errorFormatter); // format error message
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ error: errors.array().join(", ") }); // error message is a single string with all error joined together
+    }
+
+    const content = {
+      type: req.body.type,
+      body: req.body.body,
+      pageId: req.body.pageId,
+      pageOrder: req.body.pageOrder,
+    };
+
+    try {
+      const result = await dao.createContent(content);
+      res.json(result);
+    } catch (err) {
+      res.status(503).json({ error: `Database error during the creation of new page: ${err}` }); 
+    }
+  }
+);
+
 // ------------ USERS
 // GET /api/users
 app.get('/api/users', async(req, res) => {

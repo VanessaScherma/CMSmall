@@ -38,11 +38,18 @@ function PageForm(props) {
         const newImage = {
         id: Date.now().toString(),
         type: 'image',
+        body: `${imageType.toLowerCase().replace(/\s/g, '-')}.jpg`, // Aggiungi il nome dell'immagine al corpo del formElement
         image: `${imageType.toLowerCase().replace(/\s/g, '-')}.jpg`,
         };
         
         setFormElements((prevElements) => [...prevElements, newImage]);
         setParagraphImageCount(paragraphImageCount + 1)
+    };
+
+    const handleInputChange = (index, e) => {
+        const updatedFormElements = [...formElements];
+        updatedFormElements[index].body = e.target.value;
+        setFormElements(updatedFormElements);
     };
 
     const handleRemoveForm = (id, type) => {
@@ -84,41 +91,51 @@ function PageForm(props) {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-
+      
         currentDate = dayjs().format('YYYY-MM-DD');
         publicationDate !== '' ? dayjs(publicationDate).format('YYYY-MM-DD') : null;
-
+      
         const page = {
-        title: title.trim(),
-        creationDate: currentDate,
-        ...(publicationDate && { publicationDate }) // Aggiungi la proprietà solo se publicationDate è presente
+          title: title.trim(),
+          creationDate: currentDate,
+          ...(publicationDate && { publicationDate }), // Aggiungi la proprietà solo se publicationDate è presente
         };
-    
-        const contents = formElements.map((element, index) => {
-            return {
-                type: element.type,
-                body: element.body,
-                pageId: props.pageId,
-                order: index + 1
-            };
-        });
-    
+      
         if (props.page) {
-            page.id = props.page.id;
-            // Aggiungere logica per editPage
+          page.id = props.page.id;
+          // Aggiungere logica per editPage
         } else {
-            // Aggiungere logica per addPage
-            API.addPage(page);
+          API.addPage(page)
+            .then((pageId) => {
+      
+              const contents = formElements.map((element, index) => {
+                return {
+                  type: element.type,
+                  body: element.body,
+                  pageId: pageId,
+                  pageOrder: index + 1,
+                };
+              });
+      
+              // Creazione dei contenuti
+              const contentPromises = contents.map((content) => {
+                console.log(content);
+                return API.addContent(content);
+              });
+      
+              // Attendi il completamento di tutte le promesse dei contenuti
+              return Promise.all(contentPromises);
+            })
+            .then(() => {
+              console.log("Pagina e contenuti correttamente creati");
+            })
+            .catch((error) => {
+              console.error("Errore durante la creazione della nuova pagina:", error);
+              // Gestisci l'errore nel front-end
+            });
         }
-    
-        contents.forEach((content) => {
-            // Aggiungere logica per creare un singolo content
-            // Esempio: API.createContent(content);
-        });
-
-        console.log(page);
-        console.log("AUTHORID" + props.authorId);
-    };
+      };
+      
 
     return (
         <>
@@ -171,13 +188,18 @@ function PageForm(props) {
                     <Form.Group controlId={element.id} key={element.id}>
                         {element.type === 'header' && (<Form.Label className="top-space">Header</Form.Label>)}
                         {element.type === 'paragraph' && (<Form.Label className="top-space">Paragraph</Form.Label>)}
-                        {element.type === 'image' && <img src={`images/${element.image}`} alt={element.image} style={{ width: '600px', height: 'auto', marginRight: '10px' }} className="top-space" />}
+                        {element.type === 'image' && (
+                            <>
+                                <img src={`images/${element.image}`} alt={element.image} value={element.image} style={{ width: '600px', height: 'auto', marginRight: '10px' }} className="top-space" />
+                                <input type="hidden" value={element.image || ''} />
+                            </>
+                        )}
 
                         {element.type === 'header' ? (
-                        <Form.Control type="text" required={true} />
+                        <Form.Control type="text" required={true} value={element.body || ''} onChange={(e) => handleInputChange(index, e)}/>
                         ) : element.type === 'paragraph' ? (
-                        <Form.Control as="textarea" required={true} rows={3} />
-                        ) : null}
+                        <Form.Control as="textarea" required={true} rows={3} value={element.body || ''} onChange={(e) => handleInputChange(index, e)}/>
+                        ): null}
 
                         <Button variant="danger" className="button-form" onClick={() => handleRemoveForm(element.id, element.type)}>Remove</Button>
                         {index > 0 && (<Button variant="secondary" className="button-form" onClick={() => handleMoveUp(element.id)}>Up</Button>)}
