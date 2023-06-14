@@ -1,6 +1,8 @@
-import { Button, Table } from 'react-bootstrap';
+import { Button, Table, Modal } from 'react-bootstrap';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
+import API from '../API';
 
 function PageTable(props) {
 
@@ -15,7 +17,8 @@ function PageTable(props) {
         </thead>
         <tbody>
           {
-            props.pages.map((p) => <PageRow page={p} key={p.id} authorMap={props.authorMap} userName={props.userName}/>)
+            props.pages.map((p) => <PageRow page={p} key={p.id} authorMap={props.authorMap} userName={props.userName}
+            dirty={props.dirty} setDirty={props.setDirty}/>)
           }
         </tbody>
       </Table>
@@ -23,6 +26,13 @@ function PageTable(props) {
 }
 
 function PageRow(props) {
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  const dirty = props.dirty;
+  const setDirty = props.setDirty;
 
   const currentDate = dayjs();
 
@@ -38,17 +48,52 @@ function PageRow(props) {
     publicationDate = props.page.publicationDate.format('YYYY-MM-DD');
   }
 
+  const deletePage = () => {
+    API.deletePage(props.page.id)
+      .then(() => {
+        setDirty(true); // Esegui altre operazioni o aggiornamenti nel front-end dopo la cancellazione della pagina
+        return API.deleteContents(props.page.id); // Ritorna una nuova promessa per la chiamata deleteContents()
+      })
+      .then(() => {
+        // Operazioni o aggiornamenti successivi dopo la cancellazione dei contenuti
+      })
+      .catch(error => {
+        console.error("Errore durante la cancellazione della pagina:", error);
+      });
+    handleClose();
+  }
+  
+
   return (
-    <tr>
-      <td><Link to={`/pages/${props.page.id}`} 
-        state={{id: props.page.id, title: props.page.title, author: authorName, creationDate: creationDate, publicationDate: publicationDate}}>
-          {props.page.title}</Link>
-      </td>
-      <td>{authorName}</td>
-      <td>{publicationDate}</td>
-      <td>{authorName == props.userName ? <Button>Edit</Button> : <></>}</td>
-      <td>{authorName == props.userName ? <Button>Delete</Button> : <></>}</td>
-    </tr>
+    <>
+      <tr>
+        <td><Link to={`/pages/${props.page.id}`} 
+          state={{id: props.page.id, title: props.page.title, author: authorName, creationDate: creationDate, publicationDate: publicationDate}}>
+            {props.page.title}</Link>
+        </td>
+        <td>{authorName}</td>
+        <td>{publicationDate}</td>
+        <td>{authorName == props.userName ? <Button>Edit</Button> : <></>}</td>
+        <td>{authorName == props.userName ? <Button onClick={handleShow} variant="danger">Delete</Button> : <></>}</td>
+      </tr>
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure to delete the page "{props.page.title}"?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+          <Button variant="danger" onClick={() => {
+            deletePage(props.page.id)
+          }}>
+            Delete page
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
   );
 }
 

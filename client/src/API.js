@@ -95,6 +95,28 @@ const addContent = async (content) => {
     throw new Error('Internal server error');
 }
 
+const deletePage = async (pageId) => {
+  const response = await fetch(SERVER_URL + "/api/pages/" + pageId, {
+      method: 'DELETE',
+      credentials: 'include'
+  });
+  if(response.ok) {
+    return null;
+  } else
+    throw new Error('Internal server error');
+}
+
+const deleteContents = async (pageId) => {
+  const response = await fetch(SERVER_URL + "/api/pages/" + pageId + "/contents", {
+      method: 'DELETE',
+      credentials: 'include'
+  });
+  if(response.ok) {
+    return null;
+  } else
+    throw new Error('Internal server error');
+}
+
 const logIn = async (credentials) => {
     const response = await fetch(SERVER_URL + '/api/sessions', {
       method: 'POST',
@@ -137,5 +159,5 @@ const logIn = async (credentials) => {
       return null;
   }
 
-const API = { getPages, getAuthors, getContents, addPage, addContent, logIn, logOut, getUserInfo};
+const API = { getPages, getAuthors, getContents, addPage, addContent, deletePage, deleteContents, logIn, logOut, getUserInfo};
 export default API;

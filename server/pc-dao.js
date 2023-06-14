@@ -51,6 +51,17 @@ exports.createPage = (page) => {
   });
 };
 
+exports.deletePage = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'DELETE FROM page WHERE id = ?';
+    db.run(sql, [id], (err) => {
+      if (err) {
+        reject(err);
+      } else
+        resolve(null);
+    });
+  });
+}
 
 /** CONTENTS **/
 
@@ -80,6 +91,18 @@ exports.createContent = (content) => {
     });
   });
 };
+
+exports.deleteContents = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'DELETE FROM content WHERE pageId = ?';
+    db.run(sql, [id], (err) => {
+      if (err) {
+        reject(err);
+      } else
+        resolve(null);
+    });
+  });
+}
 
 
 /** USERS **/

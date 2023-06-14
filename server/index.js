@@ -207,6 +207,32 @@ app.post('/api/contents', isLoggedIn,
   }
 );
 
+app.delete('/api/pages/:id', isLoggedIn, 
+  [ check('id').isInt() ],
+  async (req, res) => {
+    try {
+      // NOTE: if there is no film with the specified id, the delete operation is considered successful.
+      await dao.deletePage(req.params.id);
+      res.status(200).json({}); 
+    } catch (err) {
+      res.status(503).json({ error: `Database error during the deletion of page ${req.params.id}: ${err} ` });
+    }
+  }
+);
+
+app.delete('/api/pages/:id/contents', isLoggedIn, 
+  [ check('id').isInt() ],
+  async (req, res) => {
+    try {
+      // NOTE: if there is no film with the specified id, the delete operation is considered successful.
+      await dao.deleteContents(req.params.id);
+      res.status(200).json({}); 
+    } catch (err) {
+      res.status(503).json({ error: `Database error during the deletion of page ${req.params.id}: ${err} ` });
+    }
+  }
+);
+
 // ------------ USERS
 // GET /api/users
 app.get('/api/users', async(req, res) => {

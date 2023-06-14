@@ -24,6 +24,8 @@ function App() {
   const [authors, setAuthors] = useState([]);
   const [authorMap, setAuthorMap] = useState({});
 
+  const [dirty, setDirty] = useState(false);
+
   useEffect(()=> {
     const fetchData = async () => {
       const pagesData = await API.getPages();
@@ -84,7 +86,7 @@ function App() {
         <Routes>
           <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
           <Route path='pages/:id' element={ <SinglePage /> } />
-          <Route path='pages' element={ loggedIn? <BackLayout pages={pages} authorMap={authorMap} user={user} /> : <NotFoundLayout/> } />
+          <Route path='pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} dirty={dirty} setDirty={setDirty} /> : <NotFoundLayout/> } />
           <Route path='add' element={ loggedIn? <AddLayout user={user} authorMap={authorMap}/> : <NotFoundLayout/> } />
           <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
         </Routes>

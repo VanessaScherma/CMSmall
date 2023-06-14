@@ -14,8 +14,11 @@ content-type: application/json
     "type": "header",
     "body": "fgdfgfd",
     "pageId": 3,
-    "pageOrder": 1
+    "pageOrder": 5
 }
+
+###
+DELETE http://localhost:3001/api/pages/20
 
 ###
 POST http://localhost:3001/api/sessions HTTP/1.1

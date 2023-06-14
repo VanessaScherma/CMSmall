@@ -4,6 +4,7 @@ import API from '../API';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { Row, Col, Button, Form } from 'react-bootstrap';
+import { useState, useEffect } from 'react';
 
 function FrontLayout(props) {
     //get published pages, sort in chronological order and add author name
@@ -31,13 +32,30 @@ function filterPublishedPages(pages) {
 }
 
 function BackLayout(props) {
+    const dirty = props.dirty;
+    const setDirty = props.setDirty;
+
+    useEffect(() => {
+        if (dirty) {
+            API.getPages()
+            .then(pages => {
+                props.setPages(pages);
+                setDirty(false);
+            })
+            .catch(e => { 
+                setDirty(false); 
+            } ); 
+        }
+    }, [dirty]);
+    
+
     return(
         <>
             <Row>
                 <Col sm={2}><h1>All Pages</h1></Col>
                 <Col sm={10}><Link to='/add' className='btn btn-outline-success'>+ New page</Link></Col>
             </Row>
-            <PageTable pages={props.pages} authorMap={props.authorMap} userName={props.user.name} />
+            <PageTable pages={props.pages} authorMap={props.authorMap} userName={props.user.name} dirty={dirty} setDirty={setDirty}/>
         </>
     )
 }
