@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 
 // Components
 import NavHeader from './components/NavbarComponents';
-import { FrontLayout, BackLayout, AddLayout, NotFoundLayout } from './components/PageLayout';
+import { FrontLayout, BackLayout, AddLayout, EditLayout, NotFoundLayout } from './components/PageLayout';
 import { LoginForm } from './components/AuthComponents';
 import { SinglePage } from './components/SinglePageComponents';
 
@@ -19,6 +19,7 @@ function App() {
   // state
   const [loggedIn, setLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(0);
   const [message, setMessage] = useState('');
   const [pages, setPages] = useState([]);
   const [authors, setAuthors] = useState([]);
@@ -50,6 +51,8 @@ function App() {
         const user = await API.getUserInfo();  // here you have the user info, if already logged in
         setUser(user);
         setLoggedIn(true);
+        const admin = await API.checkAdmin(user.id);
+        setAdmin(admin);
       } catch (err) {
         setUser(null);
         setLoggedIn(false);
@@ -63,6 +66,8 @@ function App() {
       const user = await API.logIn(credentials);
       setLoggedIn(true);
       setUser(user);
+      const admin = await API.checkAdmin(user.id);
+      setAdmin(admin);
       setMessage({msg: `Welcome, ${user.name}!`, type: 'success'});
     }catch(err) {
       setMessage({msg: err, type: 'danger'});
@@ -75,6 +80,7 @@ function App() {
     await API.logOut();
     setLoggedIn(false);
     setUser(null);
+    setAdmin(0);
     // clean up everything
     setMessage('');
   };
@@ -82,12 +88,13 @@ function App() {
   return (
     <BrowserRouter>
       <Container fluid>
-        <NavHeader loggedIn={loggedIn} handleLogout={handleLogout}/> 
+        <NavHeader loggedIn={loggedIn} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
         <Routes>
           <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
           <Route path='pages/:id' element={ <SinglePage /> } />
-          <Route path='pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} dirty={dirty} setDirty={setDirty} /> : <NotFoundLayout/> } />
-          <Route path='add' element={ loggedIn? <AddLayout user={user} authorMap={authorMap}/> : <NotFoundLayout/> } />
+          <Route path='pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} admin={admin} dirty={dirty} setDirty={setDirty} /> : <NotFoundLayout/> } />
+          <Route path='add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
+          <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
         </Routes>
         {message && <Row>

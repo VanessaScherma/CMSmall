@@ -18,7 +18,7 @@ function PageTable(props) {
         <tbody>
           {
             props.pages.map((p) => <PageRow page={p} key={p.id} authorMap={props.authorMap} userName={props.userName}
-            dirty={props.dirty} setDirty={props.setDirty}/>)
+            admin={props.admin} dirty={props.dirty} setDirty={props.setDirty} showEditDeleteButtons={props.showEditDeleteButtons}/>)
           }
         </tbody>
       </Table>
@@ -62,7 +62,8 @@ function PageRow(props) {
       });
     handleClose();
   }
-  
+
+  const showButton = (props.admin && props.showEditDeleteButtons) || (authorName === props.userName && props.showEditDeleteButtons);
 
   return (
     <>
@@ -73,8 +74,14 @@ function PageRow(props) {
         </td>
         <td>{authorName}</td>
         <td>{publicationDate}</td>
-        <td>{authorName == props.userName ? <Button>Edit</Button> : <></>}</td>
-        <td>{authorName == props.userName ? <Button onClick={handleShow} variant="danger">Delete</Button> : <></>}</td>
+        <td>{showButton && (
+          <>
+            <Link to={`/pages/${props.page.id}/edit`}>
+            Edit</Link>
+            <Button onClick={handleShow} variant="danger">Delete</Button>
+          </>
+        )}
+        </td>
       </tr>
 
       <Modal show={show} onHide={handleClose}>

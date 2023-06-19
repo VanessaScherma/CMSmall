@@ -10,12 +10,12 @@ function Page(id, title, authorId, creationDate, publicationDate) {
   this.publicationDate = dayjs(publicationDate);
 }
 
-function Content(id, type, body, pageId, order) {
+function Content(id, type, body, pageId, pageOrder) {
   this.id = id;
   this.type = type;
   this.body = body;
   this.pageId = pageId;
-  this.order = order;
+  this.pageOrder = pageOrder;
 }
 
 function User(id, name) {

@@ -114,7 +114,7 @@ app.get('/api/pages', (request, response) => {
 });
 
 // GET /api/pages/<id>
-app.get('/api/pages/:id', async(req, res) => {
+app.get('/api/pages/:id', isLoggedIn, async(req, res) => {
   try {
     const page = await dao.getPage(req.params.id);
     if(page.error)
@@ -152,7 +152,7 @@ app.post('/api/pages', isLoggedIn,
     // WARN: note that we expect watchDate with capital D but the databases does not care and uses lowercase letters, so it returns "watchdate"
     const page = {
       title: req.body.title,
-      authorId: req.user.id,
+      authorId: req.body.authorId,
       creationDate: req.body.creationDate,
       publicationDate: req.body.publicationDate,
     };
@@ -161,6 +161,7 @@ app.post('/api/pages', isLoggedIn,
       const result = await dao.createPage(page); // NOTE: createFilm returns the new created object
       res.json(result);
     } catch (err) {
+      console.log(err);
       res.status(503).json({ error: `Database error during the creation of new page: ${err}` }); 
     }
   }
@@ -175,6 +176,7 @@ app.get('/api/pages/:id/contents', async (req, res) => {
     res.status(500).end();
   }
 });
+
 
 // POST /api/contents
 app.post('/api/contents', isLoggedIn,
@@ -206,6 +208,52 @@ app.post('/api/contents', isLoggedIn,
     }
   }
 );
+
+// PUT /api/pages/<id>
+app.put('/api/pages/:id', isLoggedIn, [
+  check('title').isLength({min: 1, max:160}),
+  check('creationDate').isDate({format: 'YYYY-MM-DD', strictMode: true}),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    return res.status(422).json({errors: errors.array()});
+  }
+
+  const pageToUpdate = req.body;
+  const pageId = req.params.id;
+
+  try {
+    await dao.updatePage(pageToUpdate, pageId);
+    res.status(200).end();
+  } catch {
+    console.log(pageToUpdate);
+    console.log(pageId);
+    res.status(503).json({'error': `Impossible to update page #${pageId}.`});
+  }
+});
+
+// PUT /api/content
+app.put('/api/contents/:id', isLoggedIn, [
+  check('body').isLength({min: 1, max:160}),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({errors: errors.array()});
+  }
+
+  const contentToUpdate = req.body;
+  const contentId = req.params.id;
+
+  try {
+    await dao.updateContent(contentToUpdate, contentId);
+    res.status(200).end();
+  } catch {
+    console.log(contentToUpdate);
+    console.log(contentId);
+    res.status(503).json({'error': `Impossible to update content #${contentId}.`});
+  }
+});
 
 app.delete('/api/pages/:id', isLoggedIn, 
   [ check('id').isInt() ],
@@ -244,6 +292,44 @@ app.get('/api/users', async(req, res) => {
       res.json(users);
   } catch {
     res.status(500).end();
+  }
+});
+
+// GET /api/users/:id
+app.get('/api/users/:id', async(req, res) => {
+  try {
+    const user = await dao.checkAdmin(req.params.id);
+    if(user.error)
+      res.status(404).json(user);
+    else
+      res.json(user);
+  } catch {
+    res.status(500).end();
+  }
+  });
+
+// -------- WEBSITE NAME
+app.get('/api/website', (request, response) => {
+  dao.getWebsiteName()
+  .then(name => response.json(name))
+  .catch(() => response.status(500).end());
+});
+
+app.put('/api/website', [
+  
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({errors: errors.array()});
+  }
+
+  const name = req.body;
+
+  try {
+    await dao.updateWebsiteName(name);
+    res.status(200).end();
+  } catch {
+    res.status(503).json({'error': `Impossible to update the name of the website.`});
   }
 });
 

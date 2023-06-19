@@ -51,6 +51,19 @@ exports.createPage = (page) => {
   });
 };
 
+exports.updatePage = (page, pageId) => {
+  return new Promise ((resolve, reject) => {
+    const sql = 'UPDATE page SET title=?, authorId=?, creationDate=DATE(?), publicationDate=DATE(?) WHERE id=?';
+    db.run(sql, [page.title, page.authorId, page.creationDate, page.publicationDate, pageId], function(err) {
+      if(err) {
+        console.log(err);
+        reject(err);
+      }
+      else resolve(this.lastID);
+    });
+  });
+};
+
 exports.deletePage = (id) => {
   return new Promise((resolve, reject) => {
     const sql = 'DELETE FROM page WHERE id = ?';
@@ -73,7 +86,7 @@ exports.listContentsOf = (pageId) => {
       if (err) {
         reject(err);
       }
-      const contents = rows.map((c) => new Content(c.id, c.type, c.body, c.pageId, c.order));
+      const contents = rows.map((c) => new Content(c.id, c.type, c.body, c.pageId, c.pageOrder));
       resolve(contents);
     });
   });
@@ -88,6 +101,19 @@ exports.createContent = (content) => {
       }
       // Returning the newly created object with the DB additional properties to the client.
       resolve(this.lastID);
+    });
+  });
+};
+
+exports.updateContent = (content, contentId) => {
+  return new Promise ((resolve, reject) => {
+    const sql = 'UPDATE content SET type=?, body=?, pageId=?, pageOrder=? WHERE id=?';
+    db.run(sql, [content.type, content.body, content.pageId, content.pageOrder, contentId], function(err) {
+      if(err) {
+        console.log(err);
+        reject(err);
+      }
+      else resolve(this.lastID);
     });
   });
 };
@@ -116,6 +142,49 @@ exports.getUsers = () => {
       }
       const users = rows.map((u) => new User(u.id, u.name));
       resolve(users);
+    });
+  });
+};
+
+exports.checkAdmin = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT * FROM user WHERE id = ?';
+    db.get(sql, [id], (err, row) => {
+      if (err)
+        reject(err);
+      if (row == undefined)
+        resolve({error: 'User not found.'}); 
+      else {
+        const admin = row.admin;
+        resolve(admin);
+      }
+    });
+  });
+};
+
+/** WEBSITE **/
+exports.getWebsiteName = () => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT name FROM website';
+    db.all(sql, [], (err, row) => {
+      if (err) {
+        reject(err);
+      }
+      const name = row;
+      resolve(name);
+    });
+  });
+}
+
+exports.updateWebsiteName = (name) => {
+  return new Promise ((resolve, reject) => {
+    const sql = 'UPDATE website SET name=?';
+    db.run(sql, [name.name], function(err) {
+      if(err) {
+        console.log(err);
+        reject(err);
+      }
+      else resolve(this);
     });
   });
 };

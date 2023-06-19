@@ -17,7 +17,7 @@ function SinglePage() {
     useEffect(() => {
         const getContents = async () => {
             const pageContents = await API.getContents(id);
-            const sortedContents = pageContents.sort((a, b) => a.order - b.order);
+            const sortedContents = pageContents.sort((a, b) => a.pageOrder - b.pageOrder);
             setContents(sortedContents);
         };
         getContents();
@@ -61,10 +61,9 @@ function Paragraph(props) {
 }
 
 
-// da modificare
 function Image(props) {
     return (
-        <p>{props.body}</p>
+        <img src={`/images/${props.body}`} alt={props.body} style={{ width: '600px', height: 'auto'}}></img>
     );
 }
 

@@ -2,7 +2,7 @@ import PageTable from './PageTable';
 import PageForm from './PageForm';
 import API from '../API';
 import dayjs from 'dayjs';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Row, Col, Button, Form } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 
@@ -13,7 +13,7 @@ function FrontLayout(props) {
     return(
         <>
             <h1>Published Pages</h1>
-            <PageTable pages={publishedPages} authorMap={props.authorMap} />
+            <PageTable pages={publishedPages} authorMap={props.authorMap} showEditDeleteButtons={false} />
         </>
     )
 }
@@ -55,7 +55,8 @@ function BackLayout(props) {
                 <Col sm={2}><h1>All Pages</h1></Col>
                 <Col sm={10}><Link to='/add' className='btn btn-outline-success'>+ New page</Link></Col>
             </Row>
-            <PageTable pages={props.pages} authorMap={props.authorMap} userName={props.user.name} dirty={dirty} setDirty={setDirty}/>
+            <PageTable pages={props.pages} authorMap={props.authorMap} userName={props.user.name} admin={props.admin} dirty={dirty} setDirty={setDirty}
+            showEditDeleteButtons={true}/>
         </>
     )
 }
@@ -63,9 +64,49 @@ function BackLayout(props) {
 function AddLayout(props) {
     return(
         <>
-            <PageForm userName={props.user.name} authorId={props.user.id}/>
+            <h1 className="top-space">Write a page...</h1>
+            <p>Remember to add at least an header and at least one of the other two types of contents.</p>
+            <PageForm userName={props.user.name} authors={props.authors} admin={props.admin} authorId={props.user.id} setDirty={props.setDirty}
+            />
         </>
     )
+}
+
+function EditLayout(props) {
+
+    const { id } = useParams();
+    const [page, setPage] = useState(null);
+    const [contents, setContents] = useState([]);
+
+    useEffect(() => {
+        API.getPage(id)
+        .then(page => {
+            setPage(page);
+        })
+        .catch(e => {
+            console.log(e);
+        });
+        API.getContents(id)
+        .then(contents => {
+            contents.sort((a, b) => a.pageOrder - b.pageOrder);
+            setContents(contents);
+        })
+        .catch(e => {
+            console.log(e);
+        })
+    }, [id]);
+
+    return (
+        <>
+          {page && contents.length > 0 && (
+            <>
+              <h1 className="top-space">Edit page...</h1>
+              <p>Remember to keep at least a header and at least one of the other two types of contents.</p>
+              <PageForm page={page} contents={contents} authors={props.authors} userName={props.user.name} authorId={props.user.id} admin={props.admin} setDirty={props.setDirty} />
+            </>
+          )}
+        </>
+      );
 }
 
 function NotFoundLayout() {
@@ -79,4 +120,4 @@ function NotFoundLayout() {
     );
 }
 
-export { FrontLayout, BackLayout, AddLayout, NotFoundLayout };
+export { FrontLayout, BackLayout, AddLayout, EditLayout, NotFoundLayout };

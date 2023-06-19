@@ -1,34 +1,31 @@
 import { Page, User, Content } from './PCModels';
 const SERVER_URL = 'http://localhost:3001';
 
-/**
- * A utility function for parsing the HTTP response.
- */
-function getJson(httpResponsePromise) {
-  // server API always return JSON, in case of error the format is the following { error: <message> } 
-  return new Promise((resolve, reject) => {
-    httpResponsePromise
-      .then((response) => {
-        if (response.ok) {
-
-         // the server always returns a JSON, even empty {}. Never null or non json, otherwise the method will fail
-         response.json()
-            .then( json => resolve(json) )
-            .catch( err => reject({ error: "Cannot parse server response" }))
-
-        } else {
-          // analyzing the cause of error
-          response.json()
-            .then(obj => 
-              reject(obj)
-              ) // error msg in the response body
-            .catch(err => reject({ error: "Cannot parse server response" })) // something else
-        }
-      })
-      .catch(err => 
-        reject({ error: "Cannot communicate"  })
-      ) // connection error
+const getWebsiteName = async () => {
+  const response = await fetch(SERVER_URL + `/api/website`, {
   });
+  if(response.ok) {
+    const websiteNameJson = await response.json();
+    const websiteName = websiteNameJson[0]?.name;
+    console.log("API: " + websiteName);
+    return websiteName;
+  }
+  else
+    throw new Error('Internal server error');
+}
+
+const editWebsiteName = async (name) => {
+  const response = await fetch(SERVER_URL + '/api/website', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name })
+  });
+  console.log(name);
+  if(!response.ok) {
+    const errMessage = await response.json();
+    throw errMessage;
+  }
+  else return null;
 }
 
 const getPages = async () => {
@@ -55,7 +52,19 @@ const getContents = async (pageId) => {
   const response = await fetch(SERVER_URL + `/api/pages/${pageId}/contents`);
   if(response.ok) {
     const contentsJson = await response.json();
-    return contentsJson.map(c => new Content(c.id, c.type, c.body, c.pageId, c.order));
+    return contentsJson.map(c => new Content(c.id, c.type, c.body, c.pageId, c.pageOrder));
+  }
+  else
+    throw new Error('Internal server error');
+}
+
+const getPage = async (pageId) => {
+  const response = await fetch(SERVER_URL + `/api/pages/${pageId}`, {
+    credentials: 'include',
+  });
+  if(response.ok) {
+    const pageJson = await response.json();
+    return pageJson;
   }
   else
     throw new Error('Internal server error');
@@ -93,6 +102,36 @@ const addContent = async (content) => {
   }
   else
     throw new Error('Internal server error');
+}
+
+const updatePage = async (page) => {
+  const response = await fetch(SERVER_URL + "/api/pages/" + page.id, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    body: JSON.stringify(page)
+  });
+
+  if(!response.ok) {
+    const errMessage = await response.json();
+    throw errMessage;
+  }
+  else return null;
+}
+
+const updateContent = async (content) => {
+  const response = await fetch(SERVER_URL + "/api/contents/" + content.id, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    body: JSON.stringify(content)
+  });
+
+  if(!response.ok) {
+    const errMessage = await response.json();
+    throw errMessage;
+  }
+  else return null;
 }
 
 const deletePage = async (pageId) => {
@@ -159,5 +198,17 @@ const logIn = async (credentials) => {
       return null;
   }
 
-const API = { getPages, getAuthors, getContents, addPage, addContent, deletePage, deleteContents, logIn, logOut, getUserInfo};
+  const checkAdmin = async (userId) => {
+    const response = await fetch(SERVER_URL + `/api/users/${userId}`, {
+      credentials: 'include',
+    });
+    if(response.ok) {
+      const adminJson = await response.json();
+      return adminJson;
+    }
+    else
+      throw new Error('Internal server error');
+  }
+
+const API = { getWebsiteName, editWebsiteName, getPages, getAuthors, getContents, getPage, addPage, addContent, updatePage, updateContent, deletePage, deleteContents, logIn, logOut, getUserInfo, checkAdmin};
 export default API;

@@ -1,6 +1,9 @@
 GET http://localhost:3001/api/pages
 
 ###
+GET http://localhost:3001/api/pages/1
+
+###
 GET http://localhost:3001/api/users
 
 ###
@@ -15,6 +18,30 @@ content-type: application/json
     "body": "fgdfgfd",
     "pageId": 3,
     "pageOrder": 5
+}
+
+###
+PUT http://localhost:3001/api/pages/1 HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "title": "Titolo editato",
+    "authorId": 0,
+    "creationDate": "2023-06-09",
+    "publicationDate": "2023-06-09" 
+}
+
+###
+PUT http://localhost:3001/api/contents/1 HTTP/1.1
+content-type: application/json
+
+{
+    "id": 1,
+    "type": "paragraph",
+    "body": "Testo paragrafo editato",
+    "pageId": 1,
+    "pageOrder": "2"
 }
 
 ###
@@ -36,4 +63,18 @@ content-type: application/json
 {
     "username": "user1@gmail.com",
     "password": "passworsdsd"
+}
+
+###
+GET http://localhost:3001/api/users/0
+
+###
+GET http://localhost:3001/api/website
+
+###
+PUT http://localhost:3001/api/website HTTP/1.1
+content-type: application/json
+
+{
+    "name": "prova"
 }
