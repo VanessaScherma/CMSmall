@@ -25,7 +25,7 @@ function SinglePage() {
  
     return (
         <Container>
-            <Row><h1 className="text-center">{title}</h1></Row>
+            <Row><h1 className="text-center mt-4">{title}</h1></Row>
             <Row>
                 <Col><p className="text-start">Written by {author} on {creationDate}</p></Col>
                 <Col><p className="text-end">Published on {publicationDate}</p></Col>
@@ -62,9 +62,16 @@ function Paragraph(props) {
 
 
 function Image(props) {
-    return (
-        <img src={`/images/${props.body}`} alt={props.body} style={{ width: '600px', height: 'auto'}}></img>
-    );
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <img
+        src={`/images/${props.body}`}
+        alt={props.body}
+        style={{ width: '600px', height: 'auto' }}
+      />
+    </div>
+  );
 }
+
 
 export { SinglePage, Header, Paragraph, Image };

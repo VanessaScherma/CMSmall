@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 
 import './App.css';
 
@@ -87,8 +87,8 @@ function App() {
 
   return (
     <BrowserRouter>
+      <NavHeader loggedIn={loggedIn} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
       <Container fluid>
-        <NavHeader loggedIn={loggedIn} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
         <Routes>
           <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
           <Route path='pages/:id' element={ <SinglePage /> } />
@@ -96,8 +96,9 @@ function App() {
           <Route path='add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
+          <Route path="*" element={<NotFoundLayout />} />
         </Routes>
-        {message && <Row>
+        {message && <Row className="mt-4">
           <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
         </Row> }
       </Container>

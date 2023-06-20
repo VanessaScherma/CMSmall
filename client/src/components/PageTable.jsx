@@ -76,9 +76,9 @@ function PageRow(props) {
         <td>{publicationDate}</td>
         <td>{showButton && (
           <>
-            <Link to={`/pages/${props.page.id}/edit`}>
+            <Link to={`/pages/${props.page.id}/edit`} className='btn btn-primary'>
             Edit</Link>
-            <Button onClick={handleShow} variant="danger">Delete</Button>
+            <Button onClick={handleShow} variant="danger" className="button-table">Delete</Button>
           </>
         )}
         </td>

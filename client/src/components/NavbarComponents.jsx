@@ -42,6 +42,7 @@ function NavHeader(props) {
     <Navbar bg="dark" variant="dark">
       <Container fluid>
         <Link to='/' className='navbar-brand'>{websiteName}</Link>
+        <Link to='/' className='btn btn-outline-light'>Front-Office</Link>
         {props.admin === 1 &&
         <Button variant="btn btn-secondary" onClick={handleEditName}>
           Edit name of the website

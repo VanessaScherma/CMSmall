@@ -12,7 +12,7 @@ function FrontLayout(props) {
 
     return(
         <>
-            <h1>Published Pages</h1>
+            <h1 className="mt-2">Published Pages</h1>
             <PageTable pages={publishedPages} authorMap={props.authorMap} showEditDeleteButtons={false} />
         </>
     )
@@ -51,9 +51,9 @@ function BackLayout(props) {
 
     return(
         <>
-            <Row>
-                <Col sm={2}><h1>All Pages</h1></Col>
-                <Col sm={10}><Link to='/add' className='btn btn-outline-success'>+ New page</Link></Col>
+            <Row className="d-flex align-items-center">
+                <Col sm={2}><h1 className="mt-2">All Pages</h1></Col>
+                <Col sm={10}><Link to='/add' className='btn btn-success'>+ New page</Link></Col>
             </Row>
             <PageTable pages={props.pages} authorMap={props.authorMap} userName={props.user.name} admin={props.admin} dirty={dirty} setDirty={setDirty}
             showEditDeleteButtons={true}/>
@@ -112,10 +112,10 @@ function EditLayout(props) {
 function NotFoundLayout() {
     return(
         <>
-            <h2>This is not the route you are looking for!</h2>
-            <Link to="/">
-            <Button variant="primary">Go Home!</Button>
-            </Link>
+            <h2 className='text-center mt-4'>This is not the route you are looking for!</h2>
+            <div className="text-center">
+                <Link to="/" className='btn btn-primary'>Go Home!</Link>
+            </div>
         </>
     );
 }
