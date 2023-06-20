@@ -235,7 +235,7 @@ app.put('/api/pages/:id', isLoggedIn, [
 
 // PUT /api/content
 app.put('/api/contents/:id', isLoggedIn, [
-  check('body').isLength({min: 1, max:160}),
+  check('body').isLength({min: 1, max:1000}),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

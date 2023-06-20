@@ -22,13 +22,24 @@ function SinglePage() {
         };
         getContents();
     }, []);
+
+    function formatPublicationStatus(publicationDate) {
+        if (publicationDate === "Draft") {
+          return "Draft";
+        } else if (publicationDate.includes("Scheduled")) {
+          return publicationDate;
+        } else {
+          return `Published on ${publicationDate}`;
+        }
+    }
+      
  
     return (
         <Container>
             <Row><h1 className="text-center mt-4">{title}</h1></Row>
             <Row>
                 <Col><p className="text-start">Written by {author} on {creationDate}</p></Col>
-                <Col><p className="text-end">Published on {publicationDate}</p></Col>
+                <Col><p className="text-end">{formatPublicationStatus(publicationDate)}</p></Col>
             </Row>
             <div>
                 {contents.map((content) => {
@@ -62,16 +73,16 @@ function Paragraph(props) {
 
 
 function Image(props) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <img
-        src={`/images/${props.body}`}
-        alt={props.body}
-        style={{ width: '600px', height: 'auto' }}
-      />
-    </div>
-  );
-}
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px' }}>
+        <img
+          src={`/images/${props.body}`}
+          alt={props.body}
+          style={{ width: '600px', height: 'auto' }}
+        />
+      </div>
+    );
+  }  
 
 
 export { SinglePage, Header, Paragraph, Image };

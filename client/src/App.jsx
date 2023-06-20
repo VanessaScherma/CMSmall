@@ -13,6 +13,7 @@ import NavHeader from './components/NavbarComponents';
 import { FrontLayout, BackLayout, AddLayout, EditLayout, NotFoundLayout } from './components/PageLayout';
 import { LoginForm } from './components/AuthComponents';
 import { SinglePage } from './components/SinglePageComponents';
+import Footer from './components/Footer';
 
 import API from './API';
 function App() {
@@ -88,7 +89,7 @@ function App() {
   return (
     <BrowserRouter>
       <NavHeader loggedIn={loggedIn} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
-      <Container fluid>
+      <Container fluid style={{ marginBottom: '4rem' }}>
         <Routes>
           <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
           <Route path='pages/:id' element={ <SinglePage /> } />
@@ -102,6 +103,7 @@ function App() {
           <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
         </Row> }
       </Container>
+      <Footer />
     </BrowserRouter>
   )
 }

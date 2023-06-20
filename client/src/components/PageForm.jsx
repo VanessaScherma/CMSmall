@@ -185,7 +185,8 @@ function PageForm(props) {
         pageId: pageId,
         pageOrder: index + 1,
       };
-
+      console.log("PROPS" + props.contents[1].body);
+      console.log("NEW" + formElements[1].body);
       if (element.id && existingContentIds.includes(element.id)) {
         return API.updateContent(content);
       } else {
