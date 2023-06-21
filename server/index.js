@@ -3,9 +3,9 @@
 // imports
 const express = require('express');
 const morgan = require('morgan');
-const {check, validationResult} = require('express-validator');
+const { check, validationResult } = require('express-validator');
 const cors = require('cors');
-const dao = require('./pc-dao');
+const dao = require('./pcw-dao');
 const userDao = require('./user-dao');
 
 // Passport-related imports
@@ -23,78 +23,78 @@ app.use(morgan('dev'));
 const corsOptions = {
   origin: 'http://localhost:5173',
   optionsSuccessStatus: 200,
-  credentials: true
-}
+  credentials: true,
+};
 app.use(cors(corsOptions));
 
 // Passport: set up local strategy
-passport.use(new LocalStrategy(async function verify(username, password, cb) {
-  const user = await userDao.getUser(username, password);
-  if(!user)
-    return cb(null, false, 'Incorrect username or password.');
-    
-  return cb(null, user);
-}));
+passport.use(
+  new LocalStrategy(async function verify(username, password, cb) {
+    const user = await userDao.getUser(username, password);
+    if (!user) return cb(null, false, 'Incorrect username or password.');
+
+    return cb(null, user);
+  })
+);
 
 passport.serializeUser(function (user, cb) {
   cb(null, user);
 });
 
-passport.deserializeUser(function (user, cb) { // this user is id + email + name
+passport.deserializeUser(function (user, cb) {
   return cb(null, user);
-  // if needed, we can do extra check here (e.g., double check that the user is still in the database, etc.)
 });
 
 const isLoggedIn = (req, res, next) => {
-  if(req.isAuthenticated()) {
+  if (req.isAuthenticated()) {
     return next();
   }
-  return res.status(401).json({error: 'Not authorized'});
-}
+  return res.status(401).json({ error: 'Not authorized' });
+};
 
-app.use(session({
-  secret: "shhhhh... it's a secret!",
-  resave: false,
-  saveUninitialized: false,
-}));
+app.use(
+  session({
+    secret: "shhhhh... it's a secret!",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 app.use(passport.authenticate('session'));
 
-/*** Utility Functions ***/
+/*** Utility Function ***/
 
 // This function is used to format express-validator errors as strings
 const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
   return `${location}[${param}]: ${msg}`;
 };
 
-
 /* ROUTES */
+
 // ----------------- AUTHENTICATION ---------
+
 // POST /api/sessions
-app.post('/api/sessions', function(req, res, next) {
+app.post('/api/sessions', function (req, res, next) {
   passport.authenticate('local', (err, user, info) => {
-    if (err)
-      return next(err);
-      if (!user) {
-        // display wrong login messages
-        return res.status(401).send(info);
-      }
-      // success, perform the login
-      req.login(user, (err) => {
-        if (err)
-          return next(err);
-        
-        // req.user contains the authenticated user, we send all the user info back
-        return res.status(201).json(req.user);
-      });
+    if (err) return next(err);
+    if (!user) {
+      // display wrong login messages
+      return res.status(401).send(info);
+    }
+    // success, perform the login
+    req.login(user, (err) => {
+      if (err) return next(err);
+
+      // req.user contains the authenticated user, we send all the user info back
+      return res.status(201).json(req.user);
+    });
   })(req, res, next);
 });
 
 // GET /api/sessions/current
 app.get('/api/sessions/current', (req, res) => {
-  if(req.isAuthenticated()) {
-    res.json(req.user);}
-  else
-    res.status(401).json({error: 'Not authenticated'});
+  if (req.isAuthenticated()) {
+    res.json(req.user);
+  } else res.status(401).json({ error: 'Not authenticated' });
 });
 
 // DELETE /api/session/current
@@ -104,23 +104,21 @@ app.delete('/api/sessions/current', (req, res) => {
   });
 });
 
+// ------------ PAGES AND CONTENTS ------------
 
-// ------------ PAGES AND CONTENTS
 // GET /api/pages
 app.get('/api/pages', (request, response) => {
   dao.listPages()
-  .then(pages => response.json(pages))
-  .catch(() => response.status(500).end());
+    .then((pages) => response.json(pages))
+    .catch(() => response.status(500).end());
 });
 
 // GET /api/pages/<id>
-app.get('/api/pages/:id', isLoggedIn, async(req, res) => {
+app.get('/api/pages/:id', isLoggedIn, async (req, res) => {
   try {
     const page = await dao.getPage(req.params.id);
-    if(page.error)
-      res.status(404).json(page);
-    else
-      res.json(page);
+    if (page.error) res.status(404).json(page);
+    else res.json(page);
   } catch {
     res.status(500).end();
   }
@@ -137,19 +135,22 @@ app.get('/api/pages/:id/contents', async (req, res) => {
 });
 
 // POST /api/pages
-app.post('/api/pages', isLoggedIn,
+app.post(
+  '/api/pages',
+  isLoggedIn,
   [
-    check('title').isLength({min: 1, max:160}),
-    check('creationDate').isDate({format: 'YYYY-MM-DD', strictMode: true}),
+    check('title').isLength({ min: 1, max: 160 }),
+    check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
   ],
   async (req, res) => {
     // Is there any validation error?
     const errors = validationResult(req).formatWith(errorFormatter); // format error message
     if (!errors.isEmpty()) {
-      return res.status(422).json({ error: errors.array().join(", ") }); // error message is a single string with all error joined together
+      return res
+        .status(422)
+        .json({ error: errors.array().join(', ') }); // error message is a single string with all error joined together
     }
 
-    // WARN: note that we expect watchDate with capital D but the databases does not care and uses lowercase letters, so it returns "watchdate"
     const page = {
       title: req.body.title,
       authorId: req.body.authorId,
@@ -158,11 +159,15 @@ app.post('/api/pages', isLoggedIn,
     };
 
     try {
-      const result = await dao.createPage(page); // NOTE: createFilm returns the new created object
+      const result = await dao.createPage(page);
       res.json(result);
     } catch (err) {
       console.log(err);
-      res.status(503).json({ error: `Database error during the creation of new page: ${err}` }); 
+      res
+        .status(503)
+        .json({
+          error: `Database error during the creation of new page: ${err}`,
+        });
     }
   }
 );
@@ -177,12 +182,13 @@ app.get('/api/pages/:id/contents', async (req, res) => {
   }
 });
 
-
 // POST /api/contents
-app.post('/api/contents', isLoggedIn,
+app.post(
+  '/api/contents',
+  isLoggedIn,
   [
-    check('type').isLength({min: 1, max:160}),
-    check('body').isLength({min: 1}),
+    check('type').isLength({ min: 1, max: 160 }),
+    check('body').isLength({ min: 1 }),
     check('pageId').isNumeric(),
     check('pageOrder').isNumeric(),
   ],
@@ -190,7 +196,9 @@ app.post('/api/contents', isLoggedIn,
     // Is there any validation error?
     const errors = validationResult(req).formatWith(errorFormatter); // format error message
     if (!errors.isEmpty()) {
-      return res.status(422).json({ error: errors.array().join(", ") }); // error message is a single string with all error joined together
+      return res
+        .status(422)
+        .json({ error: errors.array().join(', ') }); // error message is a single string with all error joined together
     }
 
     const content = {
@@ -204,123 +212,139 @@ app.post('/api/contents', isLoggedIn,
       const result = await dao.createContent(content);
       res.json(result);
     } catch (err) {
-      res.status(503).json({ error: `Database error during the creation of new page: ${err}` }); 
+      res
+        .status(503)
+        .json({
+          error: `Database error during the creation of new page: ${err}`,
+        });
     }
   }
 );
 
 // PUT /api/pages/<id>
-app.put('/api/pages/:id', isLoggedIn, [
-  check('title').isLength({min: 1, max:160}),
-  check('creationDate').isDate({format: 'YYYY-MM-DD', strictMode: true}),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    console.log(errors);
-    return res.status(422).json({errors: errors.array()});
-  }
-
-  const pageToUpdate = req.body;
-  const pageId = req.params.id;
-
-  try {
-    await dao.updatePage(pageToUpdate, pageId);
-    res.status(200).end();
-  } catch {
-    console.log(pageToUpdate);
-    console.log(pageId);
-    res.status(503).json({'error': `Impossible to update page #${pageId}.`});
-  }
-});
-
-// PUT /api/content
-app.put('/api/contents/:id', isLoggedIn, [
-  check('body').isLength({min: 1, max:1000}),
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({errors: errors.array()});
-  }
-
-  const contentToUpdate = req.body;
-  const contentId = req.params.id;
-
-  try {
-    await dao.updateContent(contentToUpdate, contentId);
-    res.status(200).end();
-  } catch {
-    console.log(contentToUpdate);
-    console.log(contentId);
-    res.status(503).json({'error': `Impossible to update content #${contentId}.`});
-  }
-});
-
-app.delete('/api/pages/:id', isLoggedIn, 
-  [ check('id').isInt() ],
+app.put(
+  '/api/pages/:id',
+  isLoggedIn,
+  [
+    check('title').isLength({ min: 1, max: 160 }),
+    check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+  ],
   async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log(errors);
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const pageToUpdate = req.body;
+    const pageId = req.params.id;
+
     try {
-      // NOTE: if there is no film with the specified id, the delete operation is considered successful.
-      await dao.deletePage(req.params.id);
-      res.status(200).json({}); 
-    } catch (err) {
-      res.status(503).json({ error: `Database error during the deletion of page ${req.params.id}: ${err} ` });
+      await dao.updatePage(pageToUpdate, pageId);
+      res.status(200).end();
+    } catch {
+      res
+        .status(503)
+        .json({ error: `Impossible to update page #${pageId}.` });
     }
   }
 );
 
-app.delete('/api/pages/:id/contents', isLoggedIn, 
-  [ check('id').isInt() ],
+// PUT /api/content
+app.put(
+  '/api/contents/:id',
+  isLoggedIn,
+  [check('body').isLength({ min: 1, max: 1000 })],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const contentToUpdate = req.body;
+    const contentId = req.params.id;
+
+    try {
+      await dao.updateContent(contentToUpdate, contentId);
+      res.status(200).end();
+    } catch {
+      res
+        .status(503)
+        .json({ error: `Impossible to update content #${contentId}.` });
+    }
+  }
+);
+
+app.delete(
+  '/api/pages/:id',
+  isLoggedIn,
+  [check('id').isInt()],
   async (req, res) => {
     try {
-      // NOTE: if there is no film with the specified id, the delete operation is considered successful.
-      await dao.deleteContents(req.params.id);
-      res.status(200).json({}); 
+      await dao.deletePage(req.params.id);
+      res.status(200).json({});
     } catch (err) {
-      res.status(503).json({ error: `Database error during the deletion of page ${req.params.id}: ${err} ` });
+      res
+        .status(503)
+        .json({
+          error: `Database error during the deletion of page ${req.params.id}: ${err} `,
+        });
+    }
+  }
+);
+
+app.delete(
+  '/api/pages/:id/contents',
+  isLoggedIn,
+  [check('id').isInt()],
+  async (req, res) => {
+    try {
+      await dao.deleteContents(req.params.id);
+      res.status(200).json({});
+    } catch (err) {
+      res
+        .status(503)
+        .json({
+          error: `Database error during the deletion of page ${req.params.id}: ${err} `,
+        });
     }
   }
 );
 
 // ------------ USERS
 // GET /api/users
-app.get('/api/users', async(req, res) => {
+app.get('/api/users', async (req, res) => {
   try {
-    const users = await dao.getUsers();
-    if(users.error)
-      res.status(404).json(users);
-    else
-      res.json(users);
+    const users = await userDao.getUsers();
+    if (users.error) res.status(404).json(users);
+    else res.json(users);
   } catch {
     res.status(500).end();
   }
 });
 
 // GET /api/users/:id
-app.get('/api/users/:id', async(req, res) => {
+app.get('/api/users/:id', async (req, res) => {
   try {
-    const user = await dao.checkAdmin(req.params.id);
-    if(user.error)
-      res.status(404).json(user);
-    else
-      res.json(user);
+    const user = await userDao.checkAdmin(req.params.id);
+    if (user.error) res.status(404).json(user);
+    else res.json(user);
   } catch {
     res.status(500).end();
   }
-  });
-
-// -------- WEBSITE NAME
-app.get('/api/website', (request, response) => {
-  dao.getWebsiteName()
-  .then(name => response.json(name))
-  .catch(() => response.status(500).end());
 });
 
-app.put('/api/website', [
-  
-], async (req, res) => {
+// -------- WEBSITE NAME
+app.get('/api/website', (req, res) => {
+  dao.getWebsiteName()
+    .then((name) => res.json(name))
+    .catch(() => res.status(500).end());
+});
+
+app.put('/api/website', [], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(422).json({errors: errors.array()});
+    return res.status(422).json({ errors: errors.array() });
   }
 
   const name = req.body;
@@ -329,10 +353,9 @@ app.put('/api/website', [
     await dao.updateWebsiteName(name);
     res.status(200).end();
   } catch {
-    res.status(503).json({'error': `Impossible to update the name of the website.`});
+    res.status(503).json({ error: `Impossible to update the name of the website.` });
   }
 });
 
-
 // start the server
-app.listen(port, () => 'API server started');
+app.listen(port, () => console.log(`API listening at http://localhost:${port}`));

@@ -1,102 +1,129 @@
+import { useState } from 'react';
 import { Button, Table, Modal } from 'react-bootstrap';
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import API from '../API';
 
 function PageTable(props) {
-
+  // Render a table with page data
   return (
-      <Table striped>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Publication date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            props.pages.map((p) => <PageRow page={p} key={p.id} authorMap={props.authorMap} userName={props.userName}
-            admin={props.admin} dirty={props.dirty} setDirty={props.setDirty} showEditDeleteButtons={props.showEditDeleteButtons}/>)
-          }
-        </tbody>
-      </Table>
+    <Table striped>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Publication date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {/* Map through the pages and render a PageRow component for each page */}
+        {props.pages.map((page) => (
+          <PageRow
+            page={page}
+            key={page.id}
+            authorMap={props.authorMap}
+            userName={props.userName}
+            admin={props.admin}
+            dirty={props.dirty}
+            setDirty={props.setDirty}
+            showEditDeleteButtons={props.showEditDeleteButtons}
+          />
+        ))}
+      </tbody>
+    </Table>
   );
 }
 
 function PageRow(props) {
-  const [show, setShow] = useState(false);
+  const [showModal, setShowModal] = useState(false); // State to control delete confirmation modal
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
-
-  const dirty = props.dirty;
-  const setDirty = props.setDirty;
+  const handleCloseModal = () => setShowModal(false); // Close modal
+  const handleShowModal = () => setShowModal(true); // Show modal
 
   const currentDate = dayjs();
+  const { page, authorMap, userName, admin, setDirty, showEditDeleteButtons } = props;
+  const authorName = authorMap[page.authorId];
+  const creationDate = page.creationDate.format('YYYY-MM-DD');
 
-  const authorName = props.authorMap[props.page.authorId];
-  const creationDate = props.page.creationDate.format('YYYY-MM-DD');
-  
   let publicationDate;
-  if (!dayjs(props.page.publicationDate).isValid()) {
+  if (!dayjs(page.publicationDate).isValid()) {
     publicationDate = 'Draft';
-  } else if (dayjs(props.page.publicationDate) > currentDate) {
-    publicationDate = `Scheduled on ${props.page.publicationDate.format('YYYY-MM-DD')}`;
+  } else if (dayjs(page.publicationDate) > currentDate) {
+    publicationDate = `Scheduled on ${page.publicationDate.format('YYYY-MM-DD')}`;
   } else {
-    publicationDate = props.page.publicationDate.format('YYYY-MM-DD');
+    publicationDate = page.publicationDate.format('YYYY-MM-DD');
   }
 
   const deletePage = () => {
-    API.deletePage(props.page.id)
+    // Delete the page and its contents
+    API.deletePage(page.id)
       .then(() => {
-        setDirty(true); // Esegui altre operazioni o aggiornamenti nel front-end dopo la cancellazione della pagina
-        return API.deleteContents(props.page.id); // Ritorna una nuova promessa per la chiamata deleteContents()
+        return API.deleteContents(page.id);
       })
       .then(() => {
-        // Operazioni o aggiornamenti successivi dopo la cancellazione dei contenuti
+        setDirty(true); // Trigger a refresh after page deletion
       })
-      .catch(error => {
-        console.error("Errore durante la cancellazione della pagina:", error);
+      .catch((error) => {
+        console.error('Error deleting the page:', error);
+      })
+      .finally(() => {
+        handleCloseModal(); // Close the modal after deletion
       });
-    handleClose();
-  }
+  };
 
-  const showButton = (props.admin && props.showEditDeleteButtons) || (authorName === props.userName && props.showEditDeleteButtons);
+  const showButton =
+    (admin && showEditDeleteButtons) || (authorName === userName && showEditDeleteButtons);
 
   return (
     <>
       <tr>
-        <td><Link to={`/pages/${props.page.id}`} 
-          state={{id: props.page.id, title: props.page.title, author: authorName, creationDate: creationDate, publicationDate: publicationDate}}>
-            {props.page.title}</Link>
+        {/* Display the page title and link to the page */}
+        <td>
+          <Link
+            to={{
+              pathname: `/pages/${page.id}`,
+              state: {
+                id: page.id,
+                title: page.title,
+                author: authorName,
+                creationDate,
+                publicationDate,
+              },
+            }}
+          >
+            {page.title}
+          </Link>
         </td>
         <td>{authorName}</td>
         <td>{publicationDate}</td>
-        <td>{showButton && (
-          <>
-            <Link to={`/pages/${props.page.id}/edit`} className='btn btn-primary'>
-            Edit</Link>
-            <Button onClick={handleShow} variant="danger" className="button-table">Delete</Button>
-          </>
-        )}
+        <td>
+          {/* Show edit and delete buttons if conditions are met */}
+          {showButton && (
+            <>
+              <Link to={`/pages/${page.id}/edit`} className='btn btn-primary'>
+                Edit
+              </Link>
+              <Button onClick={handleShowModal} variant='danger' className='button-table'>
+                Delete
+              </Button>
+            </>
+          )}
         </td>
       </tr>
 
-      <Modal show={show} onHide={handleClose}>
+      <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Delete</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure to delete the page "{props.page.title}"?</Modal.Body>
+        <Modal.Body>
+          Are you sure you want to delete the page "{page.title}"?
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
+          <Button variant='secondary' onClick={handleCloseModal}>
+            Cancel
           </Button>
-          <Button variant="danger" onClick={() => {
-            deletePage(props.page.id)
-          }}>
-            Delete page
+          <Button variant='danger' onClick={deletePage}>
+            Delete Page
           </Button>
         </Modal.Footer>
       </Modal>

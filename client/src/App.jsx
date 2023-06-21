@@ -1,12 +1,9 @@
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
-// react-bootstrap section
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Container, Row, Alert } from 'react-bootstrap';
-
 import { useEffect, useState } from 'react';
+import { Container, Row, Alert } from 'react-bootstrap';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
 import NavHeader from './components/NavbarComponents';
@@ -16,18 +13,21 @@ import { SinglePage } from './components/SinglePageComponents';
 import Footer from './components/Footer';
 
 import API from './API';
-function App() {
-  // state
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-  const [admin, setAdmin] = useState(0);
-  const [message, setMessage] = useState('');
-  const [pages, setPages] = useState([]);
-  const [authors, setAuthors] = useState([]);
-  const [authorMap, setAuthorMap] = useState({});
 
+function App() {
+
+  const [loggedIn, setLoggedIn] = useState(false);  // State to keep track if the user is currently logged-in.
+  const [user, setUser] = useState(null); // State to contain the user's info
+  const [admin, setAdmin] = useState(0);  // State that contains 1 if the user is an admin, 0 otherwise
+
+  const [pages, setPages] = useState([]); // State to contain the list of pages
+  const [authors, setAuthors] = useState([]); // State to contain the list of authors
+  const [authorMap, setAuthorMap] = useState({}); // State to map authors' names with their ids
+
+  const [message, setMessage] = useState('');
   const [dirty, setDirty] = useState(false);
 
+  //To fetch the necessary data (pages and authors) from the database
   useEffect(()=> {
     const fetchData = async () => {
       const pagesData = await API.getPages();
@@ -49,10 +49,10 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        const user = await API.getUserInfo();  // here you have the user info, if already logged in
+        const user = await API.getUserInfo();  // User info, if already logged in
         setUser(user);
         setLoggedIn(true);
-        const admin = await API.checkAdmin(user.id);
+        const admin = await API.checkAdmin(user.id);  // Check if the user is an admin
         setAdmin(admin);
       } catch (err) {
         setUser(null);
@@ -97,9 +97,9 @@ function App() {
           <Route path='add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
-          <Route path="*" element={<NotFoundLayout />} />
+          <Route path='*' element={<NotFoundLayout />} />
         </Routes>
-        {message && <Row className="mt-4">
+        {message && <Row className='mt-4'>
           <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
         </Row> }
       </Container>

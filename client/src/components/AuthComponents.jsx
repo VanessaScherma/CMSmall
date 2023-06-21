@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 
 function LoginForm(props) {
   const [username, setUsername] = useState('');
@@ -10,12 +9,13 @@ function LoginForm(props) {
     event.preventDefault();
     const credentials = { username, password };
 
-    props.login(credentials);
+    props.login(credentials); // Call the login function passed as a prop
   };
 
   return (
-    <div className="mx-auto my-4" style={{ maxWidth: '400px' }}>
+    <div className='mx-auto my-4' style={{ maxWidth: '400px' }}>
       <Form onSubmit={handleSubmit}>
+        {/* Username field */}
         <Form.Group controlId='username'>
           <Form.Label>Email</Form.Label>
           <Form.Control
@@ -26,6 +26,7 @@ function LoginForm(props) {
           />
         </Form.Group>
 
+        {/* Password field */}
         <Form.Group controlId='password' className='mt-4'>
           <Form.Label>Password</Form.Label>
           <Form.Control
@@ -37,7 +38,8 @@ function LoginForm(props) {
           />
         </Form.Group>
 
-        <Button type="submit" className='mt-4 d-block mx-auto'>Login</Button>
+        {/* Submit button */}
+        <Button type='submit' className='mt-4 d-block mx-auto'>Login</Button>
       </Form>
     </div>
   );

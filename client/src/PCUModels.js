@@ -10,14 +10,6 @@ function Page(id, title, authorId, creationDate, publicationDate) {
   this.publicationDate = dayjs(publicationDate);
 }
 
-
-/* Method to enable the proper serialization to string of the dayjs object. 
-  Needed for the useLocation hook of react router when passing the answer to the edit form (AnswerComponent and AnswerForm). 
-  this.serialize = () => {
-    return {id: this.id, title: this.title, authorId: this.authorId, creationDate: this.creationDate.format('YYYY-MM-DD'), publicationDate: this.creationDate.format('YYYY-MM-DD')};
-}
-*/
-
 function Content(id, type, body, pageId, pageOrder) {
   this.id = id;
   this.type = type;
