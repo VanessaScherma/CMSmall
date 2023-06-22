@@ -263,18 +263,10 @@
 
 ## Users Credentials
 
-- email: user1@gmail.com
-  password: password1
-  admin: no
+- email: user1@gmail.com --- password: password1 --- admin: no
 
-- email: user2@gmail.com
-  password: password2
-  admin: no
+- email: user2@gmail.com --- password: password2 --- admin: no
 
-- email: user3@gmail.com
-  password: password3
-  admin: no
+- email: user3@gmail.com --- password: password3 --- admin: no
 
-- email: admin@gmail.com
-  password: passwordadmin
-  admin: yes
+- email: admin@gmail.com --- password: passwordadmin --- admin: yes
