@@ -18,6 +18,7 @@ const editWebsiteName = async (name) => {
   const response = await fetch(SERVER_URL + '/api/website', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ name })
   });
   console.log(name);
@@ -216,7 +217,7 @@ const logOut = async () => {
 
 // Checks if a user is an admin
 const checkAdmin = async (userId) => {
-  const response = await fetch(SERVER_URL + '/api/users/' + userId, {
+  const response = await fetch(SERVER_URL + '/api/users/' + userId + '/admin', {
     credentials: 'include',
   });
   if (response.ok) {

@@ -7,7 +7,7 @@ GET http://localhost:3001/api/pages/1
 GET http://localhost:3001/api/users
 
 ###
-GET http://localhost:3001/api/pages/1/contents
+GET http://localhost:3001/api/pages/36/contents
 
 ###
 POST http://localhost:3001/api/contents HTTP/1.1

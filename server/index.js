@@ -107,10 +107,10 @@ app.delete('/api/sessions/current', (req, res) => {
 // ------------ PAGES AND CONTENTS ------------
 
 // GET /api/pages
-app.get('/api/pages', (request, response) => {
+app.get('/api/pages', (req, res) => {
   dao.listPages()
-    .then((pages) => response.json(pages))
-    .catch(() => response.status(500).end());
+    .then((pages) => res.json(pages))
+    .catch(() => res.status(500).end());
 });
 
 // GET /api/pages/<id>
@@ -128,7 +128,8 @@ app.get('/api/pages/:id', isLoggedIn, async (req, res) => {
 app.get('/api/pages/:id/contents', async (req, res) => {
   try {
     const contents = await dao.listContentsOf(req.params.id);
-    res.json(contents);
+    if(contents.error) res.status(404).json(contents);
+    else res.json(contents);
   } catch {
     res.status(500).end();
   }
@@ -163,25 +164,10 @@ app.post(
       const result = await dao.createPage(page);
       res.json(result);
     } catch (err) {
-      console.log(err);
-      res
-        .status(503)
-        .json({
-          error: `Database error during the creation of new page: ${err}`,
-        });
+      res.status(503).json({error: `Database error during the creation of new page: ${err}`,});
     }
   }
 );
-
-// GET /api/pages/<id>/contents
-app.get('/api/pages/:id/contents', async (req, res) => {
-  try {
-    const contents = await dao.listContentsOf(req.params.id);
-    res.json(contents);
-  } catch {
-    res.status(500).end();
-  }
-});
 
 // POST /api/contents
 app.post(
@@ -213,11 +199,7 @@ app.post(
       const result = await dao.createContent(content);
       res.json(result);
     } catch (err) {
-      res
-        .status(503)
-        .json({
-          error: `Database error during the creation of new page: ${err}`,
-        });
+      res.status(503).json({error: `Database error during the creation of new page: ${err}`});
     }
   }
 );
@@ -242,12 +224,13 @@ app.put(
     const pageId = req.params.id;
 
     try {
-      await dao.updatePage(pageToUpdate, pageId);
-      res.status(200).end();
-    } catch {
-      res
-        .status(503)
-        .json({ error: `Impossible to update page #${pageId}.` });
+      const result = await dao.updatePage(pageToUpdate, pageId);
+      if(result.error)
+        res.status(404).json(result);
+      else
+        res.json(result);
+    } catch (err) {
+      res.status(503).json({ error: `Impossible to update page #${pageId}:  ${err}` });
     }
   }
 );
@@ -272,12 +255,13 @@ app.put(
     const contentId = req.params.id;
 
     try {
-      await dao.updateContent(contentToUpdate, contentId);
-      res.status(200).end();
+      const result = await dao.updateContent(contentToUpdate, contentId);
+      if(result.error)
+        res.status(404).json(result);
+      else
+        res.json(result);
     } catch {
-      res
-        .status(503)
-        .json({ error: `Impossible to update content #${contentId}.` });
+      res.status(503).json({ error: `Impossible to update content #${contentId}: ${err}.` });
     }
   }
 );
@@ -291,11 +275,7 @@ app.delete(
       await dao.deletePage(req.params.id);
       res.status(200).json({});
     } catch (err) {
-      res
-        .status(503)
-        .json({
-          error: `Database error during the deletion of page ${req.params.id}: ${err} `,
-        });
+      res.status(503).json({error: `Database error during the deletion of page ${req.params.id}: ${err} `});
     }
   }
 );
@@ -321,17 +301,13 @@ app.delete(
 // ------------ USERS
 // GET /api/users
 app.get('/api/users', async (req, res) => {
-  try {
-    const users = await userDao.getUsers();
-    if (users.error) res.status(404).json(users);
-    else res.json(users);
-  } catch {
-    res.status(500).end();
-  }
+  userDao.getUsers()
+    .then((users) => json(users))
+    .catch(() => res.status(500).end());
 });
 
-// GET /api/users/:id
-app.get('/api/users/:id', async (req, res) => {
+// GET /api/users/:id/admin
+app.get('/api/users/:id/admin', async (req, res) => {
   try {
     const user = await userDao.checkAdmin(req.params.id);
     if (user.error) res.status(404).json(user);
@@ -348,7 +324,9 @@ app.get('/api/website', (req, res) => {
     .catch(() => res.status(500).end());
 });
 
-app.put('/api/website', [], async (req, res) => {
+app.put('/api/website', isLoggedIn,
+  [check('name').isLength({ min: 1, max: 100 })],
+  async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });

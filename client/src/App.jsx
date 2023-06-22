@@ -92,9 +92,9 @@ function App() {
       <Container fluid style={{ marginBottom: '4rem' }}>
         <Routes>
           <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
-          <Route path='pages/:id' element={ <SinglePage /> } />
-          <Route path='pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} admin={admin} dirty={dirty} setDirty={setDirty} /> : <NotFoundLayout/> } />
-          <Route path='add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
+          <Route path='/pages/:id' element={ <SinglePage /> } />
+          <Route path='/pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} admin={admin} dirty={dirty} setDirty={setDirty} /> : <NotFoundLayout/> } />
+          <Route path='/add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <NotFoundLayout/> } />
           <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
           <Route path='*' element={<NotFoundLayout />} />

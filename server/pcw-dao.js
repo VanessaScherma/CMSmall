@@ -59,9 +59,11 @@ exports.updatePage = (page, pageId) => {
     const sql = 'UPDATE page SET title=?, authorId=?, creationDate=DATE(?), publicationDate=DATE(?) WHERE id=?';
     db.run(sql, [page.title, page.authorId, page.creationDate, page.publicationDate, pageId], function (err) {
       if (err) {
-        console.log(err);
         reject(err);
-      } else resolve(this.lastID);
+      }
+      if (this.changes !== 1) {
+        resolve({ error: 'No page was updated' });
+      } else resolve({ msg: 'Page updated ' });
     });
   });
 };
@@ -89,9 +91,13 @@ exports.listContentsOf = (pageId) => {
       if (err) {
         reject(err);
       }
+      if (rows.length === 0)
+        resolve({ error: 'Contents not found.' });
+      else {
       // Map the rows to Content objects
       const contents = rows.map((c) => new Content(c.id, c.type, c.body, c.pageId, c.pageOrder));
       resolve(contents);
+      }
     });
   });
 };
@@ -115,9 +121,11 @@ exports.updateContent = (content, contentId) => {
     const sql = 'UPDATE content SET type=?, body=?, pageId=?, pageOrder=? WHERE id=?';
     db.run(sql, [content.type, content.body, content.pageId, content.pageOrder, contentId], function (err) {
       if (err) {
-        console.log(err);
         reject(err);
-      } else resolve(this.lastID);
+      }
+      if (this.changes !== 1) {
+        resolve({ error: 'No content was updated' });
+      } else resolve({ msg: 'Content updated ' });
     });
   });
 };
