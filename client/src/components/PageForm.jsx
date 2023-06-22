@@ -246,7 +246,10 @@ function PageForm(props) {
           <Col>
             <Form.Group controlId="publicationDate" className="top-space">
               <Form.Label>Publication date</Form.Label>
-              <Form.Control type="date" value={publicationDate} onChange={event => setPublicationDate(event.target.value)} />
+                <Form.Control type='date' value={publicationDate} onChange={event => setPublicationDate(event.target.value)} />
+                {dayjs().isAfter(publicationDate) && (
+                  <Form.Text className='text-danger'>Publication date must be after the creation date.</Form.Text>
+                ) }
             </Form.Group>
           </Col>
         </Row>
