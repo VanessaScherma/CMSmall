@@ -9,7 +9,9 @@ function PageForm(props) {
   const [title, setTitle] = useState(props.page ? props.page.title : '');
   const [authorId, setAuthorId] = useState((props.admin && props.page) ? props.page.authorId : props.authorId);
   const creationDate = props.page ? dayjs(props.page.creationDate).format('DD/MM/YYYY') : dayjs().format('DD/MM/YYYY');
+  const creationDateDayjs = props.page ? dayjs(props.page.creationDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD');
   const [publicationDate, setPublicationDate] = useState((props.page && props.page.publicationDate) ? dayjs(props.page.publicationDate).format('YYYY-MM-DD') : '');
+  
 
   const [headerCount, setHeaderCount] = useState(() => {
     if (props.contents) {
@@ -247,7 +249,7 @@ function PageForm(props) {
             <Form.Group controlId="publicationDate" className="top-space">
               <Form.Label>Publication date</Form.Label>
                 <Form.Control type='date' value={publicationDate} onChange={event => setPublicationDate(event.target.value)} />
-                {dayjs().isAfter(publicationDate) && (
+                {dayjs(creationDateDayjs).isAfter(publicationDate) && (
                   <Form.Text className='text-danger'>Publication date must be after the creation date.</Form.Text>
                 ) }
             </Form.Group>
@@ -290,7 +292,7 @@ function PageForm(props) {
             </Form.Group>
           );
         })}
-        <Button className="mb-3 final-button-form" variant="primary" type="submit" disabled={headerCount < 1 || paragraphImageCount < 1} >Save page</Button>
+        <Button className="mb-3 final-button-form" variant="primary" type="submit" disabled={headerCount < 1 || paragraphImageCount < 1 || dayjs(creationDateDayjs).isAfter(publicationDate)} >Save page</Button>
         <Link className="btn btn-danger mb-3 final-button-form" to='/pages'> Cancel </Link>
       </Form>
     </>
