@@ -93,7 +93,8 @@
         "body": "Introduction",
         "pageId": 1,
         "pageOrder": 1
-      }
+      },
+      ...
     ]
     ```
     - response status: 200 OK, 404 Not Found, 500 Internal Server Error
@@ -257,7 +258,8 @@
 
 ## Screenshot
 
-![Screenshot](./img/screenshot.jpg)
+![New page](./screenshots/new-page.jpg)
+![All pages](./screenshots/all-pages.jpg)
 
 ## Users Credentials
 

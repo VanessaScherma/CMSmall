@@ -300,9 +300,9 @@ app.delete(
 
 // ------------ USERS
 // GET /api/users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', (req, res) => {
   userDao.getUsers()
-    .then((users) => json(users))
+    .then((users) => res.json(users))
     .catch(() => res.status(500).end());
 });
 

@@ -65,6 +65,7 @@ exports.getUsers = () => {
     const sql = 'SELECT id, name FROM user';
     db.all(sql, [], (err, rows) => {
       if (err) {
+        console.log(err);
         reject(err);
       }
       // Map the rows to User objects
