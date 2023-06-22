@@ -140,6 +140,7 @@ app.post(
   isLoggedIn,
   [
     check('title').isLength({ min: 1, max: 160 }),
+    check('authorId').isInt(),
     check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
   ],
   async (req, res) => {
@@ -189,8 +190,8 @@ app.post(
   [
     check('type').isLength({ min: 1, max: 160 }),
     check('body').isLength({ min: 1 }),
-    check('pageId').isNumeric(),
-    check('pageOrder').isNumeric(),
+    check('pageId').isInt(),
+    check('pageOrder').isInt(),
   ],
   async (req, res) => {
     // Is there any validation error?
@@ -227,6 +228,7 @@ app.put(
   isLoggedIn,
   [
     check('title').isLength({ min: 1, max: 160 }),
+    check('authorId').isInt(),
     check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
   ],
   async (req, res) => {
@@ -254,7 +256,12 @@ app.put(
 app.put(
   '/api/contents/:id',
   isLoggedIn,
-  [check('body').isLength({ min: 1, max: 1000 })],
+  [
+    check('type').isLength({ min: 1, max: 160 }),
+    check('body').isLength({ min: 1 }),
+    check('pageId').isInt(),
+    check('pageOrder').isInt(),
+  ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -7,7 +7,6 @@ const getWebsiteName = async () => {
   if (response.ok) {
     const websiteNameJson = await response.json();
     const websiteName = websiteNameJson[0]?.name;
-    console.log('API: ' + websiteName);
     return websiteName;
   } else {
     throw new Error('Internal server error');
@@ -198,10 +197,8 @@ const getUserInfo = async () => {
   });
   const user = await response.json();
   if (response.ok) {
-    console.log('Session ok' + user);
     return user;
   } else {
-    console.log('Session NOT ok' + user);
     throw user; // an object with the error coming from the server
   }
 };

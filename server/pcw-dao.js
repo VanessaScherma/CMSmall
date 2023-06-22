@@ -1,5 +1,5 @@
 const sqlite = require('sqlite3');
-const { Page, Content, User } = require('./PCUModels');
+const { Page, Content } = require('./PCUModels');
 
 // Open the database
 const { db } = require('./db');

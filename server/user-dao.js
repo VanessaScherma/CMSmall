@@ -2,6 +2,7 @@
 
 const { db } = require('./db');
 const crypto = require('crypto');
+const { User } = require('./PCUModels');
 
 // Function to retrieve a user based on email and password
 exports.getUser = (email, password) => {

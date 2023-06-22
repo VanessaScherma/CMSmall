@@ -41,7 +41,14 @@ function PageRow(props) {
   const handleShowModal = () => setShowModal(true); // Show modal
 
   const currentDate = dayjs();
-  const { page, authorMap, userName, admin, setDirty, showEditDeleteButtons } = props;
+
+  const page = props.page;
+  const authorMap = props.authorMap;
+  const userName = props.userName;
+  const admin = props.admin;
+  const setDirty = props.setDirty;
+  const showEditDeleteButtons = props.showEditDeleteButtons;
+
   const authorName = authorMap[page.authorId];
   const creationDate = page.creationDate.format('YYYY-MM-DD');
 
@@ -79,18 +86,8 @@ function PageRow(props) {
       <tr>
         {/* Display the page title and link to the page */}
         <td>
-          <Link
-            to={{
-              pathname: `/pages/${page.id}`,
-              state: {
-                id: page.id,
-                title: page.title,
-                author: authorName,
-                creationDate,
-                publicationDate,
-              },
-            }}
-          >
+        <Link to={`/pages/${page.id}`} 
+          state={{id: page.id, title: page.title, author: authorName, creationDate: creationDate, publicationDate: publicationDate}}>
             {page.title}
           </Link>
         </td>
