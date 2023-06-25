@@ -70,7 +70,7 @@ function App() {
     } else {
       msg = "Unknown Error";
     }
-
+    console.log(err);
     setMessageQueue(prevQueue => [...prevQueue, msg]);
   };
 

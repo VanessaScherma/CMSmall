@@ -131,20 +131,20 @@ function PageForm(props) {
       page.authorId = authorId;
     } else {
       page.authorId = props.authorId;
-    }
-
-    const contents = formElements.map((element, index) => {
-      return {
-        id: (props.contents[index] && props.contents[index].id) || '',
-        type: element.type,
-        body: element.body,
-        pageOrder: index + 1,
-      };
-    });
+    }   
   
     if (props.page) {
       // Update existing page
       page.id = props.page.id;
+      const contents = formElements.map((element, index) => {
+        return {
+          id: (props.contents[index] && props.contents[index].id) || '',
+          type: element.type,
+          body: element.body,
+          pageId: props.page.id,
+          pageOrder: index + 1,
+        };
+      });
       
       API.updatePageWithContents(page.id, page, contents)
         .then(() => {
@@ -157,6 +157,13 @@ function PageForm(props) {
     } else {
       // Add a new page
       page.creationDate = dayjs().format('YYYY-MM-DD'); // Set the current creation date
+      const contents = formElements.map((element, index) => {
+        return {
+          type: element.type,
+          body: element.body,
+          pageOrder: index + 1,
+        };
+      });
       API.addPageWithContents(page, contents)
         .then(() => {
           props.setDirty(true);

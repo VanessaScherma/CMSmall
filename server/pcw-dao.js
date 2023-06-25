@@ -68,6 +68,7 @@ exports.getPage = (id) => {
 
 // Create a new page
 exports.createPage = (page) => {
+  console.log(page);
   return new Promise((resolve, reject) => {
     const sql = 'INSERT INTO page (title, authorId, creationDate, publicationDate) VALUES(?, ?, DATE(?), DATE(?))';
     db.run(sql, [page.title, page.authorId, page.creationDate, page.publicationDate], function (err) {
@@ -131,10 +132,10 @@ exports.listContentsOf = (pageId) => {
 
 
 // Create a new content
-exports.createContent = (content, pageId) => {
+exports.createContent = (content) => {
   return new Promise((resolve, reject) => {
     const sql = 'INSERT INTO content (type, body, pageId, pageOrder) VALUES (?, ?, ?, ?)';
-    db.run(sql, [content.type, content.body, pageId, content.pageOrder], function (err) {
+    db.run(sql, [content.type, content.body, content.pageId, content.pageOrder], function (err) {
       if (err) {
         reject(err);
       }
@@ -164,6 +165,19 @@ exports.updateContent = (content, contentId) => {
 exports.deleteContents = (id) => {
   return new Promise((resolve, reject) => {
     const sql = 'DELETE FROM content WHERE pageId = ?';
+    db.run(sql, [id], (err) => {
+      if (err) {
+        reject(err);
+      } else
+        resolve(null);
+    });
+  });
+};
+
+// Delete a single content
+exports.deleteContent = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = 'DELETE FROM content WHERE id = ?';
     db.run(sql, [id], (err) => {
       if (err) {
         reject(err);

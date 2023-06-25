@@ -101,35 +101,30 @@
 
   - POST `/api/pages`
     - request parameters: credentials for passport authentication, content-type application/json 
-    - request body content: description of the page to add
+    - request body content: description of the page to add, array with descriptions of the contents to add
     ``` JSON
     {
       "title": "New title",
       "authorId": 0,
       "creationDate": 2023-06-20,
       "publicationDate": 2023-06-27
-    }
-    ```
-    - response body: the page as represented in the database
-    - response status: 200 OK, 401 Unauthorized, 422 Unprocessable Entity, 503 Service Unavailable
-
-  - POST `/api/contents`
-    - request parameters: credentials for passport authentication, content-type application/json 
-    - request body content: description of the content to add
-    ``` JSON
-    {
+    },
+    [
+      {
       "type": "header",
       "body": "Introduction",
       "pageId": 10,
       "pageOrder": 1
-    }
+      },
+      ...
+    ]
     ```
-    - response body: the content as represented in the database
+    - response body: null
     - response status: 200 OK, 401 Unauthorized, 422 Unprocessable Entity, 503 Service Unavailable
 
   - PUT `/api/pages/:id`
     - request parameters: credentials for passport authentication, content-type application/json 
-    - request body content: description of the page to update
+    - request body content: description of the page to update, array with description of the contents to update or to add
     ``` JSON
     {
       "id": 10,
@@ -137,33 +132,21 @@
       "authorId": 0,
       "creationDate": 2023-06-20,
       "publicationDate": 2023-06-27
-    }
-    ```
-    - response body: success message
-    - response status: 200 OK, 401 Unauthorized, 404 Not Found, 422 Unprocessable Entity, 503 Service Unavailable
-
-  - PUT `/api/contents/:id`
-    - request parameters: credentials for passport authentication, content-type application/json 
-    - request body content: description of the content to update
-    ``` JSON
-    {
-      "id": 30,
+    },
+    [
+      {
       "type": "header",
       "body": "Introduction",
       "pageId": 10,
-      "pageOrder": 3
-    }
+      "pageOrder": 1
+      },
+      ...
+    ]
     ```
     - response body: success message
     - response status: 200 OK, 401 Unauthorized, 404 Not Found, 422 Unprocessable Entity, 503 Service Unavailable
 
   - DELETE `/api/pages/:id`
-    - request parameters: credentials for passport authentication
-    - request body content: none
-    - response body: an empty object
-    - response status: 200 OK, 401 Unauthorized, 503 Service Unavailable
-
-  - DELETE `/api/contents/:id`
     - request parameters: credentials for passport authentication
     - request body content: none
     - response body: an empty object

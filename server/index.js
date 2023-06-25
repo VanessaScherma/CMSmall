@@ -159,34 +159,43 @@ app.post(
   '/api/pages',
   isLoggedIn,
   [
+    // Page validation checks
     check('page.title').isLength({ min: 1 }),
     check('page.authorId').isInt({ min: 1 }),
     check('page.creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
-    check('page.publicationDate').optional().isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+
+    // Contents validation checks
     check('contents.*.type').isLength({ min: 1 }),
     check('contents.*.body').isLength({ min: 1 }),
     check('contents.*.pageOrder').isInt({ min: 1 }),
   ],
   async (req, res) => {
-    const { page, contents } = req.body;
-
+    console.log(req.body);
     // Is there any validation error?
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
-      return res.status(422).json({ error: errors.array().join(', ') });
+      return res.status(422).json(errors);
     }
 
-    const authorId = userDao.checkAdmin(req.user.id) === 1 ? page.authorId : req.user.id;
+    const { page, contents } = req.body;
+
+    if (req.user.admin === 1) {
+      page.authorId = page.authorId;
+    } else {
+      page.authorId = req.user.id;
+    }    
 
     try {
-      const createdPage = await dao.createPage({ ...page, authorId });
-      const pageId = createdPage.id;
+      const pageId = await dao.createPage(page);
+      const updatedContents = contents.map((content) => {
+        return { ...content, pageId: pageId.id };
+      });    
       
-      const createdContents = await Promise.all(
-        contents.map(content => dao.createContent({ ...content, pageId }))
-      );
+      await Promise.all(
+        updatedContents.map(content => dao.createContent(content))
+      );      
 
-      res.json({ pageId, createdContents });
+      res.status(200).end();
     } catch (err) {
       res.status(503).json({ error: `Database error during the creation of new page: ${err}` });
     }
@@ -200,43 +209,56 @@ app.put(
     check('id').isInt({ min: 1 }),
     check('title').isLength({ min: 1 }),
     check('authorId').isInt({ min: 1 }),
-    check('publicationDate').optional().isDate({ format: 'YYYY-MM-DD', strictMode: true }),
-    check('contents.*.id').optional().isInt({ min: 1 }),
     check('contents.*.type').isLength({ min: 1 }),
     check('contents.*.body').isLength({ min: 1 }),
+    check('contents.*.pageId').isInt({ min: 1 }),
     check('contents.*.pageOrder').isInt({ min: 1 })
   ],
   async (req, res) => {
-  
+
 
     const pageId = req.params.id;
-    const pageToUpdate = {
-      ...req.body.page,
-      authorId: userDao.checkAdmin(req.user.id) === 1 ? req.body.authorId : req.user.id, // Use user.id if user is not an admin
-    };
-    console.log(pageToUpdate);
+    const pageToUpdate = req.body.page;
+
+    if (req.user.admin === 1) {
+      pageToUpdate.authorId = pageToUpdate.authorId;
+    } else {
+      pageToUpdate.authorId = req.user.id;
+    }    
+
     const contentsToUpdate = req.body.contents;
 
     try {
       // Update page
+
       await dao.updatePage(pageToUpdate, pageId);
+      const oldContents = await dao.listContentsOf(pageId);
 
-      // Update or create contents
-      for (const content of contentsToUpdate) {
-        if (content.id && content.id > 0) {
-          // Update existing content
-          await dao.updateContent(content, content.id);
-        } else {
-          // Create new content
-          await dao.createContent(content, pageId);
+      // Iterate over oldContents
+      oldContents.forEach((oldContent) => {
+        // Check if the id of the oldContent is not present in contentsToUpdate
+        if (!contentsToUpdate.some((content) => content.id === oldContent.id)) {
+          // Call API.deleteContent to delete the content
+          dao.deleteContent(oldContent.id)
         }
-      }
+      });
 
-      res.json({ message: 'Page and contents updated successfully' });
-    } catch (err) {
-      res.status(503).json({ error: `Failed to update page and contents: ${err}` });
+        for (const content of contentsToUpdate) {
+
+          if (content.id && content.id > 0) {
+            // Update existing content
+            await dao.updateContent(content, content.id);
+          } else {
+            // Create new content
+            await dao.createContent(content, pageId);
+          }
+        }
+
+        res.json({ message: 'Page and contents updated successfully' });
+      } catch (err) {
+        res.status(503).json({ error: `Failed to update page and contents: ${err}` });
+      }
     }
-  }
 );
 
 app.delete(
@@ -252,7 +274,7 @@ app.delete(
         return res.status(404).json({ error: `Page ${req.params.id} not found` });
       }
 
-      if (userDao.checkAdmin(req.user.id) === 1 || page.authorId === req.user.id) {
+      if (req.user.admin === 1 || page.authorId === req.user.id) {
         await dao.deletePage(req.params.id);
         await dao.deleteContents(req.params.id);
         return res.status(200).json({});
