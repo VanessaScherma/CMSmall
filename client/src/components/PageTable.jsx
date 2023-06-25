@@ -24,7 +24,7 @@ function PageTable(props) {
             key={page.id}
             authorMap={props.authorMap}
             userName={props.userName}
-            admin={props.admin}
+            {...(props.admin && { admin: props.admin })}
             dirty={props.dirty}
             setDirty={props.setDirty}
             showEditDeleteButtons={props.showEditDeleteButtons}
@@ -67,9 +67,6 @@ function PageRow(props) {
   const deletePage = () => {
     // Delete the page and its contents
     API.deletePage(page.id)
-      .then(() => {
-        return API.deleteContents(page.id);
-      })
       .then(() => {
         setDirty(true); // Trigger a refresh after page deletion
       })

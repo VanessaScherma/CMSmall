@@ -18,8 +18,8 @@ exports.getUser = (email, password) => {
         resolve(false); // If no user is found, resolve the promise with false
       }
       else {
-        // Create a user object with id, username, and name from the database row
-        const user = { id: row.id, username: row.email, name: row.name };
+        // Create a user object with id, username, name and admin from the database row
+        const user = { id: row.id, username: row.email, name: row.name, admin: row.admin };
         
         // Use crypto to hash the provided password using the stored salt value
         crypto.scrypt(password, row.salt, 32, function(err, hashedPassword) {
@@ -51,7 +51,7 @@ exports.getUserById = (id) => {
       }
       else {
         // Create a user object with id, username, and name from the database row
-        const user = { id: row.id, username: row.email, name: row.name };
+        const user = { id: row.id, username: row.email, name: row.name, admin: row.admin };
         resolve(user); // Resolve the promise with the user object
       }
     });

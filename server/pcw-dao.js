@@ -4,6 +4,9 @@ const { Page, Content } = require('./PCUModels');
 // Open the database
 const { db } = require('./db');
 
+const dayjs = require('dayjs');
+
+
 /** PAGES **/
 
 // Get all the pages
@@ -20,6 +23,30 @@ exports.listPages = () => {
     });
   });
 };
+
+// Get published pages only
+exports.listPublishedPages = () => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT * FROM page';
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        reject(err);
+      }
+      // Map the rows to Page objects
+      const pages = rows.map((p) => new Page(p.id, p.title, p.authorId, p.creationDate, p.publicationDate));
+
+      const currentDate = dayjs();
+
+      // Filter published pages based on publication date
+      const filteredPages = pages.filter((page) =>
+        dayjs(page.publicationDate) <= currentDate
+      );
+
+      resolve(filteredPages);
+    });
+  });
+};
+
 
 // Get a page given its id
 exports.getPage = (id) => {
@@ -56,8 +83,8 @@ exports.createPage = (page) => {
 // Update a page
 exports.updatePage = (page, pageId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE page SET title=?, authorId=?, creationDate=DATE(?), publicationDate=DATE(?) WHERE id=?';
-    db.run(sql, [page.title, page.authorId, page.creationDate, page.publicationDate, pageId], function (err) {
+    const sql = 'UPDATE page SET title=?, publicationDate=DATE(?), authorId=? WHERE id=?';
+    db.run(sql, [page.title, page.publicationDate, page.authorId, pageId], function (err) {
       if (err) {
         reject(err);
       }
@@ -102,11 +129,12 @@ exports.listContentsOf = (pageId) => {
   });
 };
 
+
 // Create a new content
-exports.createContent = (content) => {
+exports.createContent = (content, pageId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'INSERT INTO content (type, body, pageId, pageOrder) VALUES(?, ?, ?, ?)';
-    db.run(sql, [content.type, content.body, content.pageId, content.pageOrder], function (err) {
+    const sql = 'INSERT INTO content (type, body, pageId, pageOrder) VALUES (?, ?, ?, ?)';
+    db.run(sql, [content.type, content.body, pageId, content.pageOrder], function (err) {
       if (err) {
         reject(err);
       }
@@ -118,14 +146,16 @@ exports.createContent = (content) => {
 // Update a content
 exports.updateContent = (content, contentId) => {
   return new Promise((resolve, reject) => {
-    const sql = 'UPDATE content SET type=?, body=?, pageId=?, pageOrder=? WHERE id=?';
-    db.run(sql, [content.type, content.body, content.pageId, content.pageOrder, contentId], function (err) {
+    const sql = 'UPDATE content SET type=?, body=?, pageOrder=? WHERE id=?';
+    db.run(sql, [content.type, content.body, content.pageOrder, contentId], function (err) {
       if (err) {
         reject(err);
       }
       if (this.changes !== 1) {
         resolve({ error: 'No content was updated' });
-      } else resolve({ msg: 'Content updated ' });
+      } else {
+        resolve({ msg: 'Content updated' });
+      }
     });
   });
 };

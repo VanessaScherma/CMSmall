@@ -33,7 +33,7 @@
   - response status: 200 OK (successful logout)
 
 - GET `/api/pages`
-  - request parameters: none
+  - request parameters: credentials for passport authentication
   - request body content: none
   - response body: array of objects, each describing one page:
   ``` json
@@ -187,17 +187,6 @@
     ]
     ```
     - response status: 200 OK, 500 Internal Server Error
-
-  - GET `/api/users/:id/admin`
-    - request parameters: none
-    - request body content: none
-    - response body: 'admin' value of the user #id:
-    ``` json
-    [
-      0
-    ]
-    ```
-    - response status: 200 OK, 404 Not Found, 500 Internal Server Error
 
    - GET `/api/website`
     - request parameters: none

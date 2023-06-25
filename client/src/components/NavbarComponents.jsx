@@ -50,20 +50,20 @@ function NavHeader(props) {
         <Link to='/' className='navbar-brand'>{websiteName}</Link>
 
         <Navbar.Text className="mx-2">
-        {props.user && props.user.name && (
+          {props.loggedIn && (
           <>
-            {props.admin === 1 ? 'Welcome admin, ' : 'Welcome, '}
-            {props.user.name}
+          {props.user.admin === 1 ? 'Welcome admin, ' : 'Welcome, '}
+          {props.user.name}
           </>
-        )}
-      </Navbar.Text>
+          )}
+        </Navbar.Text>
 
         
         {/* Front-Office link */}
         <Link to='/' className='btn btn-outline-light'>Front-Office</Link>
         
         {/* Edit website name button (for admins) */}
-        {props.admin === 1 && (
+        {props.loggedIn && props.user.admin === 1 && (
           <Button variant='btn btn-secondary' onClick={handleEditName}>
             Edit name of the website
           </Button>

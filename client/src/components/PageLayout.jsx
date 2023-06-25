@@ -75,7 +75,7 @@ function BackLayout(props) {
                 pages={props.pages}
                 authorMap={props.authorMap}
                 userName={props.user.name}
-                admin={props.admin}
+                admin={props.user.admin}
                 dirty={props.dirty}
                 setDirty={props.setDirty}
                 showEditDeleteButtons={true}
@@ -95,7 +95,7 @@ function AddLayout(props) {
             <PageForm
                 userName={props.user.name}
                 authors={props.authors}
-                admin={props.admin}
+                admin={props.user.admin}
                 authorId={props.user.id}
                 setDirty={props.setDirty}
             />
@@ -147,7 +147,7 @@ function EditLayout(props) {
                         authors={props.authors}
                         userName={props.user.name}
                         authorId={props.user.id}
-                        admin={props.admin}
+                        admin={props.user.admin}
                         setDirty={props.setDirty}
                     />
                 </>

@@ -123,7 +123,6 @@ function PageForm(props) {
      // Create the page object
     const page = {
       title: title.trim(), // Extract and trim the title
-      creationDate: dayjs().format('YYYY-MM-DD'), // Set the current creation date
       publicationDate: publicationDate !== '' ? dayjs(publicationDate).format('YYYY-MM-DD') : null, // Format the publication date or set it to null if empty
     };
 
@@ -133,14 +132,22 @@ function PageForm(props) {
     } else {
       page.authorId = props.authorId;
     }
+
+    const contents = formElements.map((element, index) => {
+      return {
+        id: (props.contents[index] && props.contents[index].id) || '',
+        type: element.type,
+        body: element.body,
+        pageOrder: index + 1,
+      };
+    });
   
     if (props.page) {
       // Update existing page
       page.id = props.page.id;
-      API.updatePage(page)
+      
+      API.updatePageWithContents(page.id, page, contents)
         .then(() => {
-          // Update page contents after page update
-          updatePageContents(props.page.id);
           props.setDirty(true);
           navigate('/pages');
         })
@@ -149,25 +156,8 @@ function PageForm(props) {
         });
     } else {
       // Add a new page
-      API.addPage(page)
-        .then((pageId) => {
-          // Create an array of content objects based on formElements
-          const contents = formElements.map((element, index) => {
-            return {
-              type: element.type,
-              body: element.body,
-              pageId: pageId,
-              pageOrder: index + 1,
-            };
-          });
-  
-          // Create an array of promises for adding content
-          const contentPromises = contents.map((content) => {
-            return API.addContent(content);
-          });
-  
-          return Promise.all(contentPromises);
-        })
+      page.creationDate = dayjs().format('YYYY-MM-DD'); // Set the current creation date
+      API.addPageWithContents(page, contents)
         .then(() => {
           props.setDirty(true);
           navigate('/pages');
@@ -176,38 +166,6 @@ function PageForm(props) {
           handleErrors(e);
         });
     }
-  };
-  
-  // Update page contents
-  const updatePageContents = (pageId) => {
-    // Get the existing content IDs
-    const existingContentIds = props.contents.map((content) => content.id);
-  
-    // Create an array of promises for updating or adding content
-    const updateContentsPromises = formElements.map((element, index) => {
-      const content = {
-        id: element.id,
-        type: element.type,
-        body: element.body,
-        pageId: pageId,
-        pageOrder: index + 1,
-      };
-  
-      if (element.id && existingContentIds.includes(element.id)) {
-        // Update existing content
-        return API.updateContent(content);
-      } else {
-        if (!existingContentIds.includes(element.id)) {
-          // Add new content
-          return API.addContent(content);
-        } else {
-          // Resolve promise if content already exists
-          return Promise.resolve();
-        }
-      }
-    });
-  
-    return Promise.all(updateContentsPromises);
   };
 
   return (

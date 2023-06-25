@@ -52,6 +52,13 @@ const isLoggedIn = (req, res, next) => {
   return res.status(401).json({ error: 'Not authorized' });
 };
 
+const isLoggedInAdmin = (req, res, next) => {
+  if (req.isAuthenticated() && req.user.admin === 1) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Not authorized' });
+};
+
 app.use(
   session({
     secret: "shhhhh... it's a secret!",
@@ -108,13 +115,24 @@ app.delete('/api/sessions/current', (req, res) => {
 
 // GET /api/pages
 app.get('/api/pages', (req, res) => {
-  dao.listPages()
-    .then((pages) => res.json(pages))
-    .catch(() => res.status(500).end());
+  if (req.isAuthenticated()) {
+    // Logged-in user, send all pages
+    dao.listPages()
+      .then((pages) => res.json(pages))
+      .catch(() => res.status(500).end());
+  } else {
+    // Send only published pages
+    dao.listPublishedPages()
+      .then((pages) => res.json(pages))
+      .catch(() => res.status(500).end());
+  }
 });
 
+
 // GET /api/pages/<id>
-app.get('/api/pages/:id', isLoggedIn, async (req, res) => {
+app.get('/api/pages/:id', isLoggedIn,
+[ check('id').isInt({ min: 1 }) ],
+  async (req, res) => {
   try {
     const page = await dao.getPage(req.params.id);
     if (page.error) res.status(404).json(page);
@@ -125,7 +143,9 @@ app.get('/api/pages/:id', isLoggedIn, async (req, res) => {
 });
 
 // GET /api/pages/<id>/contents
-app.get('/api/pages/:id/contents', async (req, res) => {
+app.get('/api/pages/:id/contents',
+[ check('id').isInt({ min: 1 }) ],
+ async (req, res) => {
   try {
     const contents = await dao.listContentsOf(req.params.id);
     if(contents.error) res.status(404).json(contents);
@@ -135,133 +155,86 @@ app.get('/api/pages/:id/contents', async (req, res) => {
   }
 });
 
-// POST /api/pages
 app.post(
   '/api/pages',
   isLoggedIn,
   [
-    check('title').isLength({ min: 1, max: 160 }),
-    check('authorId').isInt(),
-    check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+    check('page.title').isLength({ min: 1 }),
+    check('page.authorId').isInt({ min: 1 }),
+    check('page.creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+    check('page.publicationDate').optional().isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+    check('contents.*.type').isLength({ min: 1 }),
+    check('contents.*.body').isLength({ min: 1 }),
+    check('contents.*.pageOrder').isInt({ min: 1 }),
   ],
   async (req, res) => {
+    const { page, contents } = req.body;
+
     // Is there any validation error?
-    const errors = validationResult(req).formatWith(errorFormatter); // format error message
+    const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json({ error: errors.array().join(', ') }); // error message is a single string with all error joined together
+      return res.status(422).json({ error: errors.array().join(', ') });
     }
 
-    const page = {
-      title: req.body.title,
-      authorId: req.body.authorId,
-      creationDate: req.body.creationDate,
-      publicationDate: req.body.publicationDate,
-    };
+    const authorId = userDao.checkAdmin(req.user.id) === 1 ? page.authorId : req.user.id;
 
     try {
-      const result = await dao.createPage(page);
-      res.json(result);
+      const createdPage = await dao.createPage({ ...page, authorId });
+      const pageId = createdPage.id;
+      
+      const createdContents = await Promise.all(
+        contents.map(content => dao.createContent({ ...content, pageId }))
+      );
+
+      res.json({ pageId, createdContents });
     } catch (err) {
-      res.status(503).json({error: `Database error during the creation of new page: ${err}`,});
+      res.status(503).json({ error: `Database error during the creation of new page: ${err}` });
     }
   }
 );
 
-// POST /api/contents
-app.post(
-  '/api/contents',
-  isLoggedIn,
-  [
-    check('type').isLength({ min: 1, max: 160 }),
-    check('body').isLength({ min: 1 }),
-    check('pageId').isInt(),
-    check('pageOrder').isInt(),
-  ],
-  async (req, res) => {
-    // Is there any validation error?
-    const errors = validationResult(req).formatWith(errorFormatter); // format error message
-    if (!errors.isEmpty()) {
-      return res
-        .status(422)
-        .json({ error: errors.array().join(', ') }); // error message is a single string with all error joined together
-    }
-
-    const content = {
-      type: req.body.type,
-      body: req.body.body,
-      pageId: req.body.pageId,
-      pageOrder: req.body.pageOrder,
-    };
-
-    try {
-      const result = await dao.createContent(content);
-      res.json(result);
-    } catch (err) {
-      res.status(503).json({error: `Database error during the creation of new page: ${err}`});
-    }
-  }
-);
-
-// PUT /api/pages/<id>
 app.put(
   '/api/pages/:id',
   isLoggedIn,
   [
-    check('title').isLength({ min: 1, max: 160 }),
-    check('authorId').isInt(),
-    check('creationDate').isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+    check('id').isInt({ min: 1 }),
+    check('title').isLength({ min: 1 }),
+    check('authorId').isInt({ min: 1 }),
+    check('publicationDate').optional().isDate({ format: 'YYYY-MM-DD', strictMode: true }),
+    check('contents.*.id').optional().isInt({ min: 1 }),
+    check('contents.*.type').isLength({ min: 1 }),
+    check('contents.*.body').isLength({ min: 1 }),
+    check('contents.*.pageOrder').isInt({ min: 1 })
   ],
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log(errors);
-      return res.status(422).json({ errors: errors.array() });
-    }
+  
 
-    const pageToUpdate = req.body;
     const pageId = req.params.id;
+    const pageToUpdate = {
+      ...req.body.page,
+      authorId: userDao.checkAdmin(req.user.id) === 1 ? req.body.authorId : req.user.id, // Use user.id if user is not an admin
+    };
+    console.log(pageToUpdate);
+    const contentsToUpdate = req.body.contents;
 
     try {
-      const result = await dao.updatePage(pageToUpdate, pageId);
-      if(result.error)
-        res.status(404).json(result);
-      else
-        res.json(result);
+      // Update page
+      await dao.updatePage(pageToUpdate, pageId);
+
+      // Update or create contents
+      for (const content of contentsToUpdate) {
+        if (content.id && content.id > 0) {
+          // Update existing content
+          await dao.updateContent(content, content.id);
+        } else {
+          // Create new content
+          await dao.createContent(content, pageId);
+        }
+      }
+
+      res.json({ message: 'Page and contents updated successfully' });
     } catch (err) {
-      res.status(503).json({ error: `Impossible to update page #${pageId}:  ${err}` });
-    }
-  }
-);
-
-// PUT /api/content
-app.put(
-  '/api/contents/:id',
-  isLoggedIn,
-  [
-    check('type').isLength({ min: 1, max: 160 }),
-    check('body').isLength({ min: 1 }),
-    check('pageId').isInt(),
-    check('pageOrder').isInt(),
-  ],
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-
-    const contentToUpdate = req.body;
-    const contentId = req.params.id;
-
-    try {
-      const result = await dao.updateContent(contentToUpdate, contentId);
-      if(result.error)
-        res.status(404).json(result);
-      else
-        res.json(result);
-    } catch {
-      res.status(503).json({ error: `Impossible to update content #${contentId}: ${err}.` });
+      res.status(503).json({ error: `Failed to update page and contents: ${err}` });
     }
   }
 );
@@ -269,34 +242,28 @@ app.put(
 app.delete(
   '/api/pages/:id',
   isLoggedIn,
-  [check('id').isInt()],
+  [check('id').isInt({ min: 1 })],
   async (req, res) => {
     try {
-      await dao.deletePage(req.params.id);
-      res.status(200).json({});
+      const page = await dao.getPage(req.params.id);
+    console.log(page);
+    console.log(req.user.id);
+      if (!page) {
+        return res.status(404).json({ error: `Page ${req.params.id} not found` });
+      }
+
+      if (userDao.checkAdmin(req.user.id) === 1 || page.authorId === req.user.id) {
+        await dao.deletePage(req.params.id);
+        await dao.deleteContents(req.params.id);
+        return res.status(200).json({});
+      }
+      return res.status(403).json({ error: 'Not authorized to delete this page' });
     } catch (err) {
-      res.status(503).json({error: `Database error during the deletion of page ${req.params.id}: ${err} `});
+      res.status(503).json({ error: `Database error during the deletion of page ${req.params.id}: ${err}` });
     }
   }
 );
 
-app.delete(
-  '/api/pages/:id/contents',
-  isLoggedIn,
-  [check('id').isInt()],
-  async (req, res) => {
-    try {
-      await dao.deleteContents(req.params.id);
-      res.status(200).json({});
-    } catch (err) {
-      res
-        .status(503)
-        .json({
-          error: `Database error during the deletion of page ${req.params.id}: ${err} `,
-        });
-    }
-  }
-);
 
 // ------------ USERS
 // GET /api/users
@@ -306,16 +273,6 @@ app.get('/api/users', (req, res) => {
     .catch(() => res.status(500).end());
 });
 
-// GET /api/users/:id/admin
-app.get('/api/users/:id/admin', async (req, res) => {
-  try {
-    const user = await userDao.checkAdmin(req.params.id);
-    if (user.error) res.status(404).json(user);
-    else res.json(user);
-  } catch {
-    res.status(500).end();
-  }
-});
 
 // -------- WEBSITE NAME
 app.get('/api/website', (req, res) => {
@@ -324,7 +281,7 @@ app.get('/api/website', (req, res) => {
     .catch(() => res.status(500).end());
 });
 
-app.put('/api/website', isLoggedIn,
+app.put('/api/website', isLoggedInAdmin,
   [check('name').isLength({ min: 1, max: 100 })],
   async (req, res) => {
   const errors = validationResult(req);

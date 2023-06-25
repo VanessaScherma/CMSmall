@@ -31,7 +31,9 @@ const editWebsiteName = async (name, userId) => {
 
 // Retrieves pages from the server
 const getPages = async () => {
-  const response = await fetch(SERVER_URL + '/api/pages');
+  const response = await fetch(SERVER_URL + '/api/pages', {
+    credentials: 'include',
+  });
   if (response.ok) {
     const pagesJson = await response.json();
     return pagesJson.map(p => new Page(p.id, p.title, p.authorId, p.creationDate, p.publicationDate));
@@ -75,35 +77,16 @@ const getPage = async (pageId) => {
   }
 }
 
-// Adds a new page on the server
-const addPage = async (page) => {
+// Add a page with its contents
+const addPageWithContents = async (page, contents) => {
   const response = await fetch(SERVER_URL + '/api/pages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify(page)
+    body: JSON.stringify({ page, contents })
   });
-  if (response.ok) {
-    const pageJson = await response.json();
-    return pageJson.id;
-  } else {
-    throw new Error('Internal server error');
-  }
-}
-
-// Adds a new content on the server
-const addContent = async (content) => {
-  const response = await fetch(SERVER_URL + '/api/contents', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify(content)
-  });
-  console.log(response);
   if (response.ok) {
     return null;
   } else {
@@ -111,30 +94,13 @@ const addContent = async (content) => {
   }
 }
 
-// Updates a page on the server
-const updatePage = async (page) => {
-  const response = await fetch(SERVER_URL + '/api/pages/' + page.id, {
+// Updates a page and its contents on the server
+const updatePageWithContents = async (pageId, page, contents) => {
+  const response = await fetch(SERVER_URL + '/api/pages/' + pageId, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(page)
-  });
-
-  if (!response.ok) {
-    const errMessage = await response.json();
-    throw errMessage;
-  } else {
-    return null;
-  }
-}
-
-// Updates a content on the server
-const updateContent = async (content) => {
-  const response = await fetch(SERVER_URL + '/api/contents/' + content.id, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(content)
+    body: JSON.stringify({ page, contents })
   });
 
   if (!response.ok) {
@@ -148,19 +114,6 @@ const updateContent = async (content) => {
 // Deletes a page from the server
 const deletePage = async (pageId) => {
   const response = await fetch(SERVER_URL + '/api/pages/' + pageId, {
-    method: 'DELETE',
-    credentials: 'include'
-  });
-  if (response.ok) {
-    return null;
-  } else {
-    throw new Error('Internal server error');
-  }
-}
-
-// Deletes contents of a page from the server
-const deleteContents = async (pageId) => {
-  const response = await fetch(SERVER_URL + '/api/pages/' + pageId + '/contents', {
     method: 'DELETE',
     credentials: 'include'
   });
@@ -214,19 +167,5 @@ const logOut = async () => {
   }
 }
 
-// Checks if a user is an admin
-const checkAdmin = async (userId) => {
-  const response = await fetch(SERVER_URL + '/api/users/' + userId + '/admin', {
-    credentials: 'include',
-  });
-  if (response.ok) {
-    const adminJson = await response.json();
-    return adminJson;
-  } else {
-    throw new Error('Internal server error');
-  }
-}
-
-const API = { getWebsiteName, editWebsiteName, getPages, getAuthors, getContents, getPage, addPage,
-  addContent, updatePage, updateContent, deletePage, deleteContents, logIn, logOut, getUserInfo, checkAdmin };
+const API = { getWebsiteName, editWebsiteName, getPages, getAuthors, getContents, getPage, addPageWithContents, updatePageWithContents, deletePage, logIn, logOut, getUserInfo };
 export default API;
