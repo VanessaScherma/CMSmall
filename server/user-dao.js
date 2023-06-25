@@ -74,20 +74,3 @@ exports.getUsers = () => {
     });
   });
 };
-
-// Check if a user is an admin
-exports.checkAdmin = (id) => {
-  return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM user WHERE id = ?';
-    db.get(sql, [id], (err, row) => {
-      if (err)
-        reject(err);
-      if (row == undefined)
-        resolve({ error: 'User not found.' });
-      else {
-        const admin = row.admin;
-        resolve(admin);
-      }
-    });
-  });
-};

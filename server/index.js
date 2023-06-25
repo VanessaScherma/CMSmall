@@ -231,7 +231,12 @@ app.put(
     try {
       // Update page
 
-      await dao.updatePage(pageToUpdate, pageId);
+      try {
+        await dao.updatePage(pageToUpdate, pageId);
+      }
+      catch (e) {
+        res.status(404).json({ error: `Page ${pageId} not found` })
+      };
       const oldContents = await dao.listContentsOf(pageId);
 
       // Iterate over oldContents
@@ -247,7 +252,12 @@ app.put(
 
           if (content.id && content.id > 0) {
             // Update existing content
-            await dao.updateContent(content, content.id);
+            try {
+              await dao.updateContent(content, content.id);
+            }
+            catch (e) {
+              res.status(404).json({ error: `Content ${content.id} not found` })
+            }
           } else {
             // Create new content
             await dao.createContent(content, pageId);
@@ -268,8 +278,6 @@ app.delete(
   async (req, res) => {
     try {
       const page = await dao.getPage(req.params.id);
-    console.log(page);
-    console.log(req.user.id);
       if (!page) {
         return res.status(404).json({ error: `Page ${req.params.id} not found` });
       }

@@ -150,7 +150,7 @@
     - request parameters: credentials for passport authentication
     - request body content: none
     - response body: an empty object
-    - response status: 200 OK, 401 Unauthorized, 503 Service Unavailable
+    - response status: 200 OK, 401 Unauthorized, 403 Error Forbidden, 503 Service Unavailable
   
   - GET `/api/users`
     - request parameters: none
@@ -195,7 +195,7 @@
     ]
     ```
     - response body: none
-    - response status: 200 OK, 503 Service Unavailable
+    - response status: 200 OK, 401 Unauthorized, 503 Service Unavailable
 
 ## Database Tables
 
