@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { Link, useParams } from 'react-router-dom';
+import MessageContext from '../messageCtx';
 import PageTable from './PageTable';
 import PageForm from './PageForm';
 import dayjs from 'dayjs';
@@ -44,6 +45,8 @@ const filterPublishedPages = (pages) => {
 
 // Component for displaying all pages in the back-office
 function BackLayout(props) {
+    const {handleErrors} = useContext(MessageContext);
+
     useEffect(() => {
         // Fetch pages if the dirty flag is true
         if (props.dirty) {
@@ -53,6 +56,7 @@ function BackLayout(props) {
                     props.setDirty(false);
                 })
                 .catch(e => {
+                    handleErrors(e);
                     props.setDirty(false);
                 });
         }
@@ -105,6 +109,8 @@ function EditLayout(props) {
     const [page, setPage] = useState(null);
     const [contents, setContents] = useState([]);
 
+    const {handleErrors} = useContext(MessageContext);
+
     useEffect(() => {
         // Fetch page and contents based on the ID parameter
         API.getPage(id)
@@ -112,7 +118,7 @@ function EditLayout(props) {
                 setPage(page);
             })
             .catch(e => {
-                console.log(e);
+                handleErrors(e);
             });
 
         API.getContents(id)
@@ -122,7 +128,7 @@ function EditLayout(props) {
                 setContents(contents);
             })
             .catch(e => {
-                console.log(e);
+                handleErrors(e);
             });
     }, [id]);
 

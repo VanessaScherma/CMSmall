@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button, Table, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
+import MessageContext from '../messageCtx';
 import API from '../API';
 
 function PageTable(props) {
@@ -40,6 +41,8 @@ function PageRow(props) {
   const handleCloseModal = () => setShowModal(false); // Close modal
   const handleShowModal = () => setShowModal(true); // Show modal
 
+  const {handleErrors} = useContext(MessageContext);
+
   const currentDate = dayjs();
 
   const page = props.page;
@@ -70,8 +73,8 @@ function PageRow(props) {
       .then(() => {
         setDirty(true); // Trigger a refresh after page deletion
       })
-      .catch((error) => {
-        console.error('Error deleting the page:', error);
+      .catch((e) => {
+        handleErrors(e)
       })
       .finally(() => {
         handleCloseModal(); // Close the modal after deletion

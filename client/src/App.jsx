@@ -1,8 +1,8 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
-import { useEffect, useState } from 'react';
-import { Container, Row, Alert } from 'react-bootstrap';
+import { useEffect, useState, useContext } from 'react';
+import { Container, Toast } from 'react-bootstrap';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
@@ -12,6 +12,7 @@ import { LoginForm } from './components/AuthComponents';
 import { SinglePage } from './components/SinglePageComponents';
 import Footer from './components/Footer';
 
+import MessageContext from './messageCtx';
 import API from './API';
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
   const [authors, setAuthors] = useState([]); // State to contain the list of authors
   const [authorMap, setAuthorMap] = useState({}); // State to map authors' names with their ids
 
-  const [message, setMessage] = useState('');
+  const [messageQueue, setMessageQueue] = useState([]);
   const [dirty, setDirty] = useState(false);
 
   //To fetch the necessary data (pages and authors) from the database
@@ -62,6 +63,20 @@ function App() {
     init();
   }, []);
 
+   // If some errors occur, the error message will be shown in a toast.
+   const handleErrors = (err) => {
+    let msg = '';
+    if (err.error) {
+      msg = err.error;
+    } else if (typeof err === "string") {
+      msg = err;
+    } else {
+      msg = "Unknown Error";
+    }
+
+    setMessageQueue(prevQueue => [...prevQueue, msg]);
+  };
+
   const handleLogin = async (credentials) => {
     try {
       const user = await API.logIn(credentials);
@@ -69,11 +84,9 @@ function App() {
       setUser(user);
       const admin = await API.checkAdmin(user.id);
       setAdmin(admin);
-      setMessage({msg: `Welcome, ${user.name}!`, type: 'success'});
     }catch(err) {
-      setMessage({msg: err, type: 'danger'});
       setUser(null);
-      console.log(err);
+      throw err;
     }
   };
 
@@ -82,28 +95,33 @@ function App() {
     setLoggedIn(false);
     setUser(null);
     setAdmin(0);
-    // clean up everything
-    setMessage('');
   };
 
   return (
     <BrowserRouter>
-      <NavHeader loggedIn={loggedIn} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
-      <Container fluid style={{ marginBottom: '4rem' }}>
-        <Routes>
-          <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
-          <Route path='/pages/:id' element={ <SinglePage /> } />
-          <Route path='/pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} admin={admin} dirty={dirty} setDirty={setDirty} /> : <Navigate replace to='/' /> } />
-          <Route path='/add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <Navigate replace to='/' /> } />
-          <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <Navigate replace to='/' />} />
-          <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
-          <Route path='*' element={<NotFoundLayout />} />
-        </Routes>
-        {message && <Row className='mt-4'>
-          <Alert variant={message.type} onClose={() => setMessage('')} dismissible>{message.msg}</Alert>
-        </Row> }
-      </Container>
-      <Footer />
+      <MessageContext.Provider value={{ handleErrors }}>
+        <NavHeader loggedIn={loggedIn} user={user} admin={admin} handleLogout={handleLogout} dirty={dirty} setDirty={setDirty}/> 
+        <Container fluid style={{ marginBottom: '4rem' }}>
+          <Routes>
+            <Route path='/' element={ <FrontLayout pages={pages} authorMap={authorMap} /> } />
+            <Route path='/pages/:id' element={ <SinglePage /> } />
+            <Route path='/pages' element={ loggedIn? <BackLayout pages={pages} setPages={setPages} authorMap={authorMap} user={user} admin={admin} dirty={dirty} setDirty={setDirty} /> : <Navigate replace to='/' /> } />
+            <Route path='/add' element={ loggedIn? <AddLayout user={user} authors={authors} admin={admin} dirty={dirty} setDirty={setDirty}/> : <Navigate replace to='/' /> } />
+            <Route path='/pages/:id/edit' element={ loggedIn? <EditLayout pages={pages} authors={authors} user={user} admin={admin} dirty={dirty} setDirty={setDirty}/> : <Navigate replace to='/' />} />
+            <Route path='/login' element={loggedIn ? <Navigate replace to='/' /> : <LoginForm login={handleLogin} />} />
+            <Route path='*' element={<NotFoundLayout />} />
+          </Routes>
+          
+          <div>
+            {messageQueue.length !== 0 && (
+              <Toast onClose={() => setMessageQueue([])} delay={4000} autohide bg="danger">
+                <Toast.Body>{messageQueue}</Toast.Body>
+              </Toast>
+            )}
+          </div>
+        </Container>
+        <Footer />
+      </MessageContext.Provider>
     </BrowserRouter>
   )
 }

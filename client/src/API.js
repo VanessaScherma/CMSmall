@@ -14,14 +14,13 @@ const getWebsiteName = async () => {
 }
 
 // Updates the website name on the server
-const editWebsiteName = async (name) => {
+const editWebsiteName = async (name, userId) => {
   const response = await fetch(SERVER_URL + '/api/website', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name, userId })
   });
-  console.log(name);
   if (!response.ok) {
     const errMessage = await response.json();
     throw errMessage;

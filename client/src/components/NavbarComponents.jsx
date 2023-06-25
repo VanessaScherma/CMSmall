@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Navbar, Container, Button, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { LogoutButton } from './AuthComponents';
+import MessageContext from '../messageCtx';
 import API from '../API';
 
 function NavHeader(props) {
   const [websiteName, setWebsiteName] = useState(''); // State to store the current website name
   const [newWebsiteName, setNewWebsiteName] = useState(''); // State to capture the new website name entered in the modal
   const [showModal, setShowModal] = useState(false);
+
+  const {handleErrors} = useContext(MessageContext);
 
   useEffect(() => {
     // Fetch the website name when props.dirty changes
@@ -28,14 +31,15 @@ function NavHeader(props) {
   };
 
   const handleSaveChanges = () => {
-    API.editWebsiteName(newWebsiteName)
+    API.editWebsiteName(newWebsiteName, props.user.id)
       .then(() => {
         // Actions to perform after successfully saving changes
         handleCloseModal(); // Close the modal
         props.setDirty(true); // Set dirty state to indicate changes have been made
       })
-      .catch(error => {
-        console.error('Error while saving changes:', error);
+      .catch(e => {
+        handleErrors(e);
+        console.log('Error while saving changes:', e);
       });
   };
 
@@ -44,6 +48,16 @@ function NavHeader(props) {
       <Container fluid>
         {/* Website name */}
         <Link to='/' className='navbar-brand'>{websiteName}</Link>
+
+        <Navbar.Text className="mx-2">
+        {props.user && props.user.name && (
+          <>
+            {props.admin === 1 ? 'Welcome admin, ' : 'Welcome, '}
+            {props.user.name}
+          </>
+        )}
+      </Navbar.Text>
+
         
         {/* Front-Office link */}
         <Link to='/' className='btn btn-outline-light'>Front-Office</Link>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Form, ButtonGroup, Button, Dropdown, DropdownButton, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import dayjs from "dayjs";
+import MessageContext from '../messageCtx';
 import API from '../API';
 
 function PageForm(props) {
@@ -38,6 +39,7 @@ function PageForm(props) {
   });
 
   const navigate = useNavigate();
+  const {handleErrors} = useContext(MessageContext);
 
   const handleAddHeader = () => {
     const newHeader = {
@@ -143,7 +145,7 @@ function PageForm(props) {
           navigate('/pages');
         })
         .catch((e) => {
-          console.error(e);
+          handleErrors(e);
         });
     } else {
       // Add a new page
@@ -171,7 +173,7 @@ function PageForm(props) {
           navigate('/pages');
         })
         .catch((e) => {
-          console.error(e);
+          handleErrors(e);
         });
     }
   };
@@ -215,7 +217,7 @@ function PageForm(props) {
           <Col sm={8}>
             <Form.Group controlId="title">
               <Form.Label>Title</Form.Label>
-              <Form.Control type="text" required={true} value={title} onChange={event => setTitle(event.target.value)} onFocus={() => console.log(title)} />
+              <Form.Control type="text" required={true} value={title} onChange={event => setTitle(event.target.value)} />
             </Form.Group>
           </Col>
           <Col>
