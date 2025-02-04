@@ -1,6 +1,6 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/8AapHqUJ)
-# Exam #1: "CMSmall"
-## Student: s317904 SCHERMA VANESSA 
+# CMSmall
+
+CMSmall is a content management system (CMS) that allows authenticated users to create, edit, and manage pages, with features for publishing, saving as a draft, or scheduling. The system consists of an administration (back-office) area for managing pages and a front-office version accessible to all users, where published pages can be viewed and read. The project is developed with React, Node.js/Express, and SQLite.
 
 ## React Client Application Routes
 
@@ -36,23 +36,23 @@
   - request parameters: credentials for passport authentication
   - request body content: none
   - response body: array of objects, each describing one page:
-  ``` json
+  ```json
   [
     {
       "id": 1,
       "title": "Mountain Adventures: Exploring Nature's Majesty",
       "authorId": 0,
-      "creationDate": 2023-06-20,
+      "creationDate": "2023-06-20",
       "publicationDate": null
     },
     {
       "id": 2,
       "title": "Summer Destinations of 2023: Where to Go for Unforgettable Adventures",
       "authorId": 0,
-      "creationDate": 2023-06-20,
+      "creationDate": "2023-06-20",
       "publicationDate": null
     },
-    ...
+    "..."
   ]
   ```
   - response status: 200 OK, 500 Internal Server Error
@@ -67,7 +67,7 @@
         "id": 1,
         "title": "Mountain Adventures: Exploring Nature's Majesty",
         "authorId": 0,
-        "creationDate": 2023-06-20,
+        "creationDate": "2023-06-20",
         "publicationDate": null
       }
     ]
@@ -94,7 +94,7 @@
         "pageId": 1,
         "pageOrder": 1
       },
-      ...
+      "..."
     ]
     ```
     - response status: 200 OK, 404 Not Found, 500 Internal Server Error
@@ -106,8 +106,8 @@
     {
       "title": "New title",
       "authorId": 0,
-      "creationDate": 2023-06-20,
-      "publicationDate": 2023-06-27
+      "creationDate": "2023-06-20",
+      "publicationDate": "2023-06-27"
     },
     [
       {
@@ -116,7 +116,7 @@
       "pageId": 10,
       "pageOrder": 1
       },
-      ...
+      "..."
     ]
     ```
     - response body: null
@@ -130,8 +130,8 @@
       "id": 10,
       "title": "New updated title",
       "authorId": 0,
-      "creationDate": 2023-06-20,
-      "publicationDate": 2023-06-27
+      "creationDate": "2023-06-20",
+      "publicationDate": "2023-06-27"
     },
     [
       {
@@ -140,7 +140,7 @@
       "pageId": 10,
       "pageOrder": 1
       },
-      ...
+      "..."
     ]
     ```
     - response body: success message
@@ -166,7 +166,7 @@
         "id": 1,
         "name": "Thomas Miller"
       },
-      ...
+      "..."
     ]
     ```
     - response status: 200 OK, 500 Internal Server Error
@@ -187,7 +187,7 @@
   - PUT `/api/website`
     - request parameters: credentials for passport authentication, content-type application/json 
     - request body content: name of the website
-       ``` json
+    ``` json
     [
       {
         "name": "New Travel CMS"
