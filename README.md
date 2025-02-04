@@ -230,7 +230,7 @@ CMSmall is a content management system (CMS) that allows authenticated users to 
 
 ## Screenshot
 
-![Example published page](.screenshots/example-page.jpg)
+![Example published page](./screenshots/example-page.jpg)
 ![New page](./screenshots/new-page.jpg)
 ![All pages](./screenshots/all-pages.jpg)
 
